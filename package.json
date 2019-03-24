@@ -1,0 +1,27 @@
+{
+  "name": "restaurantdb",
+  "version": "1.0.0",
+  "description": "cpsc304 project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gracez72/restaurantDB.git"
+  },
+  "author": "Austin He, Dianna Kan, Xueqi Zeng, Grace Zhang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gracez72/restaurantDB/issues"
+  },
+  "homepage": "https://github.com/gracez72/restaurantDB#readme",
+  "dependencies": {
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "ejs": "~2.5.7",
+    "express": "~4.16.0",
+    "http-errors": "~1.6.2",
+    "morgan": "~1.9.0"
+  }
+}
