@@ -6,4 +6,9 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+router.post('/search', function (req, res) {
+  console.log(req.body.search + " searched ");
+  res.redirect('/');
+});
+
 module.exports = router;
