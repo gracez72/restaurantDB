@@ -7,9 +7,18 @@
   </head>
   <body>
     <h1>RestaruantDB</h1>
-    <form class="example" action="/search" method="POST">
-      <input type="text" placeholder="Search.." name="search">
-      <button type="submit"><i class="fa fa-search"></i></button>
+    <form class="example" action="/login" method="POST">
+      <input type="text" placeholder="Account Name" name="AccName">
+      <input type="text" placeholder="User Name" name="Name">
+      <input type="text" placeholder="Password" name="password">
+      <button type="submit">Login</button>
+    </form>
+
+    <form class="example" action="/register" method="POST">
+      <input type="text" placeholder="Account Name" name="AccName">
+      <input type="text" placeholder="User Name" name="Name">
+      <input type="text" placeholder="Password" name="password">
+      <button type="submit">Register</button>
     </form>
   </body>
 </html>
