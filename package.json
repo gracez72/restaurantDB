@@ -2,9 +2,8 @@
   "name": "restaurantdb",
   "version": "1.0.0",
   "description": "cpsc304 project",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./bin/www"
   },
   "repository": {
     "type": "git",
