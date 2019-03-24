@@ -10,8 +10,8 @@ router.get('/main', function (req, res) {
   res.render('main', { title: 'Express' });
 });
 
-router.get('/restaruant', function (req, res) {
-  res.render('restaruant', { title: 'Express' });
+router.get('/restaurant', function (req, res) {
+  res.render('restaurant', { title: 'Express' });
 });
 
 router.get('/employees', function (req, res) {
@@ -46,27 +46,27 @@ router.post('/use', function (req, res) {
 
 router.post('/name', function (req, res) {
   console.log(req.body.name + " name ");
-  res.redirect('/restaruant');
+  res.redirect('/restaurant');
 });
 
 router.post('/type', function (req, res) {
   console.log(req.body.type + " type ");
-  res.redirect('/restaruant');
+  res.redirect('/restaurant');
 });
 
 router.post('/rating', function (req, res) {
   console.log(req.body.rating + " rating ");
-  res.redirect('/restaruant');
+  res.redirect('/restaurant');
 });
 
 router.post('/review', function (req, res) {
   console.log(req.body.review + " review ");
-  res.redirect('/restaruant');
+  res.redirect('/restaurant');
 });
 
 router.post('/allergy', function (req, res) {
   console.log(req.body.review + " allergy ");
-  res.redirect('/restaruant');
+  res.redirect('/restaurant');
 });
 
 router.post('/cuisine', function (req, res) {
