@@ -3,7 +3,7 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('employees', { title: 'Express' });
+  res.render('index', { title: 'Express' });
 });
 
 router.get('/main', function (req, res) {
@@ -60,7 +60,7 @@ router.post('/rating', function (req, res) {
 });
 
 router.post('/review', function (req, res) {
-  console.log(req.body.review + " review ");
+  console.log(req.body.review + " " + req.body.rating +" review ");
   res.redirect('/restaurant');
 });
 
