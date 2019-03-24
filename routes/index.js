@@ -82,4 +82,10 @@ router.post('/register', function (req, res) {
   console.log(req.body.AccName+ " "+ req.body.Name +" " + req.body.password);
   res.redirect('/main');
 });
+
+router.post('/logout', function (req, res) {
+  console.log("logout");
+  res.redirect('/');
+});
+
 module.exports = router;

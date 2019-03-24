@@ -1,27 +1,41 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>RestaurantDB</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-      <h1>RestaurantDB:Employee</h1>
-      <button class="example" action="/ingredient">View Ingredient of Dishes</button>
-      <button class="example" action="/pay">View Average Pay</button>
-      <button class="example" action="/expiry">View Expiry Date of Ingredients</button>
-      <button class="example" action="/report">View Expense Report</button>
-    <form class = "example" action="/purchase" method="POST">
-      <p>Update Ingredient Purchased</p>
-      <input type="text" placeholder="Ingredient Name" name="name">
-      <input type="text" placeholder="Amount" name="amount">
-      <button type="submit">Submit</button>
-    </form>
-    <form class = "example" action="/use" method="POST">
-      <p>Update Ingredient Used</p>
-      <input type="text" placeholder="Ingredient Name" name="name">
-      <input type="text" placeholder="Amount" name="amount">
-      <button type="submit">Submit</button>
-    </form>
-  </body>
+
+<head>
+  <title>RestaurantDB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+  <h1>RestaurantDB:Employee</h1>
+  <form class="example" action="/ingredient" method="POST">
+    <button type="submit">View Ingredient of Dishes</button>
+  </form>
+  <form class="example" action="/pay" method="POST">
+    <button type="submit">View Average Pay</button>
+  </form>
+  <form class="example" action="/expiry" method="POST">
+    <button type="submit">View Expiry Date of Ingredients</button>
+  </form>
+  <form class="example" action="/report" method="POST">
+    <button type="submit">View Expense Report</button>
+  </form>
+  <form class="example" action="/purchase" method="POST">
+    <p>Update Ingredient Purchased</p>
+    <input type="text" placeholder="Ingredient Name" name="name">
+    <input type="text" placeholder="Amount" name="amount">
+    <button type="submit">Submit</button>
+  </form>
+  <form class="example" action="/use" method="POST">
+    <p>Update Ingredient Used</p>
+    <input type="text" placeholder="Ingredient Name" name="name">
+    <input type="text" placeholder="Amount" name="amount">
+    <button type="submit">Submit</button>
+  </form>
+  <form class="example" action="/logout" method="POST">
+    <button type="submit">LogOut</button>
+  </form>
+</body>
+
 </html>
