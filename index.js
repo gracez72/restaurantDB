@@ -3,11 +3,20 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const Pool = require('pg').Pool;
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
+
+const pool = new Pool({
+	// user: 'pi',
+	// host: 'localhost',
+	// database: config.postgresDB[app.settings.env],
+	// password: 'pi',
+	// port: 5432,
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
