@@ -21,6 +21,11 @@ form.example input[type=text] {
   background: #f1f1f1;
 }
 
+form.example p{
+  font-size: 20px;
+  font-weight: bold;
+}
+
 /* Style the submit button */
 form.example button {
   float: left;
@@ -32,6 +37,13 @@ form.example button {
   border: 1px solid grey;
   border-left: none; /* Prevent double borders */
   cursor: pointer;
+}
+
+button{
+  font-size: 17px;
+  background: #2196F3;
+  color: white;
+  padding: 10px;
 }
 
 form.example button:hover {
