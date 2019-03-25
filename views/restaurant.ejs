@@ -1,18 +1,68 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RestaurantDB</title>
+    <title>RestaruantDB</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
+
+            <table class="res">
+             <tr>
+               <td class="rname"><%= name %></td>
+               <td class="rname"><%= rating %>/5 </td>
+             </tr>
+             <tr>
+               <td class="ratt">Type: <%= type %></td>
+               <td class="ratt">Address: <%= addr %></td>
+             </tr>
+             <tr>
+               <td class="rdesc">Description: <%= desc %></td>
+             </tr>
+            </table>
+            
+            <h2>Dishes</h2>
+            <% dish.forEach(function(dat) { %>
+              <table class="res">
+               <tr>
+                 <td class="ratt"><%= dat.dishname %></td>
+               </tr>
+               <tr>
+                 <td class="rdesc">Price: <%= dat.price %></td>
+               </tr>
+               <tr>
+                 <td class="rdesc">Available Until: <%= dat.availableuntil %></td>
+               </tr>
+              </table>
+            </form>
+            <% }); %>
+
+            <h2>Reviews</h2>
+
+            <% review.forEach(function(dat) { %>
+              <table class="res">
+               <tr>
+                 <td class="ratt"><%= dat.customername %></td>
+                 <td class="ratt"><%= dat.rating %>/5 </td>
+               </tr>
+               <tr>
+                 <td class="rdesc">Date <%= dat.reviewdate %></td>
+               </tr>
+               <tr>
+                 <td class="rdesc">Comments: <%= dat.reviewdesccription %></td>
+               </tr>
+              </table>
+            </form>
+            <% }); %>
+  
+            
+          
     <form class = "example" action="/review" method="POST">
-        <input type="text" placeholder="Write reviews for this restaruant" name="review">
+      <input type="text" placeholder="Name" name="name">
+      <input type="text" placeholder="rating" name="rating">
+        <textarea rows="3" cols="150" type="text" placeholder="Write reviews for this restaruant" name="review"></textarea>
         <input type="text" placeholder="Input ratings" name="rating">
         <button type="submit">Submit</button>
-    </form>
-    <form class="example" action="/logout" method="POST">
-      <button type="submit">LogOut</button>
     </form>
   </body>
 </html>

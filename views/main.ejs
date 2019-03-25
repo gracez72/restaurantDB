@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RestaurantDB</title>
+    <title>RestaruantDB</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <h1>RestaurantDB</h1>
+      <form class="example" action="/" method="GET">
+        <button type="submit">Logout</button>
+      </form>
+      <form class="example" action="/profile" method="GET">
+        <button type="submit">Profile</button>
+      </form>
+
+    <h1>RestaruantDB</h1>
     <form class="example" action="/name" method="POST">
-      <input type="text" placeholder="Search Restaurant by Name" name="name">
+      <input type="text" placeholder="Search Restaruant by Name" name="name">
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
     <form class="example" action="/type" method="POST">
-      <input type="text" placeholder="Search Restaurant by Type" name="type">
+      <input type="text" placeholder="Search Restaruant by Type" name="type">
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
     <form class="example" action="/allergy" method="POST">
-      <input type="text" placeholder="Search Restaurant based on allergy" name="allergy">
+      <input type="text" placeholder="Search Restaruant based on allergy" name="allergy">
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
     <form class="example" action="/rating" method="POST">
-      <input type="text" placeholder="Search Restaurant by Rating" name="rating">
+      <input type="text" placeholder="Search Restaruant by Rating" name="rating">
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
-    <form class="example" action="/cuisine" method="POST">
-      <input type="text" placeholder="Update Preferred Cuisine" name="cuisine">
-      <button type="submit">Submit</button>
-    </form>
-    <form class="example" action="/logout" method="POST">
-      <button type="submit">LogOut</button>
-    </form>
+
   </body>
 </html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RestaruantDB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+      <h1>RestaruantDB:Employee</h1>
+      <h3>Account Name: <%= accountname%></h3>
+      <h3>User Name: <%= username%></h3>
+      <h3># of reviews: <%= numreviews%></h3>
+      <h3>Preference: <%= preference%></h3>
+      <form class="example" action="/cuisine" method="POST">
+        <input type="text" placeholder="Update Preferred Cuisine" name="cuisine">
+        <button type="submit">Submit</button>
+      </form>
+  </body>
+</html>

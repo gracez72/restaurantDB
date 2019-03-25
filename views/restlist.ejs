@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RestaruantDB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+
+          <% data.forEach(function(dat) { %>
+            <table class="res">
+             <tr>
+               <td class="rname"> <a href="/restaurant?rid=<%= dat.restaurantid %>"><%= dat.restaurantname %></a></td>
+               <td class="rname"><%= dat.rating %>/5 </td>
+             </tr>
+             <tr>
+               <td class="ratt">Type: <%= dat.restauranttype %></td>
+               <td class="ratt">Address: <%= dat.restaurantaddress %></td>
+             </tr>
+             <tr>
+               <td class="rdesc">Description: <%= dat.restaurantdescription %></td>
+             </tr>
+            </table>
+          <% }); %>
+
+          
+  </body>
+</html>

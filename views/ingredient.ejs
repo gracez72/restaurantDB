@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RestaruantDB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+      <h1>RestaruantDB:Employee</h1>
+
+      <% dish.forEach(function(dat) { %>
+        <table class="res">
+            <tr>
+                <td class="ratt"><%= dat.dishname %></td>
+            </tr>
+        <% dat.ingredient.forEach(function(i) { %>
+         <tr>
+           <td class="rdesc"><%= i.ingredientname %></td>
+           <td class="rdesc">Amount: <%= i.amount %> </td>
+         </tr>
+         <% }); %>
+
+        </table>
+      <% }); %>
+
+
+      <form class="example" action="/profile" method="GET">
+        <button type="submit">Back</button>
+      </form>
+  </body>
+</html>
