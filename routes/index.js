@@ -282,10 +282,10 @@ router.post('/purchase', function (req, res) {
   var d = new Date();
 
 
-  // client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
-  // [req.body.name,req.body.amount,d],(error,result)=>{
-  //   if(error) throw error;
-  //   else{
+  client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
+  [req.body.name,req.body.amount,d],(error,result)=>{
+    if(error) throw error;
+    else{
       client.query("select max(ingredientid) from ingredient",
         [],(error1,result1)=>{
           if(error1) throw error1;
@@ -305,8 +305,8 @@ router.post('/purchase', function (req, res) {
             })
           }
       })
-  //   }
-  // }) 
+    }
+  }) 
 });
 
 
@@ -462,7 +462,7 @@ router.post('/register', function (req, res) {
   client.query("INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ($1, $2, $3)",
     [req.body.AccName,req.body.Name,req.body.password],(error,results)=>{
       if(error) {
-        res.render('loginError',{msg:'Sorry, this account name already exists, try another one'})
+        res.render('loginerr',{msg:'Sorry, this account name already exists, try another one'})
       }
       else{
         client.query("select userid from users where accountName=$1",[req.body.AccName],(error2,result2)=>{
