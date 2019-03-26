@@ -63,7 +63,8 @@ router.get('/restaurant', function (req, res) {
             rating:result.rows[0].rating,
             review:result2.rows,
             dish:result3.rows,
-            image:result4.rows
+            image:result4.rows,
+            status: req.query.status,
           })
         })
       })
@@ -463,12 +464,18 @@ router.post('/allergy', function (req, res) {
   //req.body.allergy
   var allergy = req.body.allergy.toLowerCase();
   console.log(allergy);
-  client.query(`create view rest_dish_ingr as (select r1.restaurantid, count(*) from restaurant r1, dish d, ingredientsused iu, ingredient i where r1.restaurantid = d.restaurantid and d.dishid = iu.dishid and iu.ingredientid = i.ingredientid and LOWER(i.ingredientname) like ${allergy} group by r1.restaurantid union select r2.restaurantid, 0 from restaurant r2 where r2.restaurantid not in (select r3.restaurantid from restaurant r3, dish d, ingredientsused iu, ingredient i where r3.restaurantid = d.restaurantid and d.dishid = iu.dishid and iu.ingredientid = i.ingredientid and LOWER(i.ingredientname) like ${allergy}))`,(err,result)=>{
+  client.query(`create view rest_dish_ingr as (select r1.restaurantid, count(*) from restaurant r1, 
+  dish d, ingredientsused iu, ingredient i where r1.restaurantid = d.restaurantid and d.dishid = iu.dishid 
+  and iu.ingredientid = i.ingredientid and LOWER(i.ingredientname) like \'${allergy}\' group by r1.restaurantid 
+  union select r2.restaurantid, 0 from restaurant r2 where r2.restaurantid not in (select r3.restaurantid from 
+    restaurant r3, dish d, ingredientsused iu, ingredient i where r3.restaurantid = d.restaurantid and 
+    d.dishid = iu.dishid and iu.ingredientid = i.ingredientid and LOWER(i.ingredientname) like \'${allergy}\'))`,
+    (err,result)=>{
     if (err) throw err;
     client.query("select * from restaurant where restaurantid in (select restaurantid from rest_dish_ingr order by count limit 10)",(err2,result2)=>{
       if(err2) throw err2;
       client.query("drop view rest_dish_ingr",(err3,result3)=>{
-        res.render('restlist',result2.rows)
+        res.render('restlist',{data:result2.rows})
       })
     })
   })
@@ -558,8 +565,10 @@ router.post('/register', function (req, res) {
 router.post('/image', function (req, res) {
   client.query(`insert into images values($1,$2,$3)`, [req.query.rid, req.body.tag, req.body.url]
     ,(err,result)=>{
-    if (err) throw err;
-    res.redirect('/restaurant?rid='+req.query.rid);
+    if (err) {
+      res.redirect('/restaurant?status=-1&rid='+req.query.rid);
+    }
+    else res.redirect('/restaurant?rid='+req.query.rid);
   })
 });
 

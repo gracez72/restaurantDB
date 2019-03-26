@@ -63,6 +63,10 @@
               </table>
             <% }); %>
   
+            <% if(status==-1){ %>
+              <h3 style="color:red">Tag taken please use another tag!</h3>
+              <% }%>
+
             <form class = "example" action="/image?rid=<%= rid%>" method="POST">
               <input type="text" placeholder="TAG" name="tag">
               <input type="text" placeholder="image url" name="url">
