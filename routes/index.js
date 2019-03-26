@@ -87,11 +87,10 @@ router.get('/ingredient', function (req, res) {
     if(err) throw err;
     client.query("select dish.dishname, newi.*, i.ingredientname, iu.amountused, i.ingredientid from dish, newi, ingredientsused IU, ingredient i where newi.dishid=dish.dishid and iu.dishid=dish.dishid and i.ingredientid=iu.ingredientid",(err2,result2)=>{
       if(err2) throw err2;
-
-      client.query("drop view newi", (err3,result3)=>{
+      client.query("drop view newi",(err3,result3)=>{
         if(err3) throw err3;
         if(result2.rows.length === 0){
-
+          
         }
         else{
           var temp = result2.rows[0].dishname;
@@ -125,20 +124,28 @@ router.get('/ingredient', function (req, res) {
           console.log(newsub);
         }
         console.log(array);
-        client.query("select i.ingredientid, ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid group by iu.ingredientid))",
+        client.query(`select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
+        to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
+        ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
+        (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in 
+          (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid 
+          group by iu.ingredientid))
+      union select distinct i2.ingredientid, ie2.ingredientname, to_char( ie2.dateproduced, 'DD/MM/YYYY') as dateproduced, 
+      to_char( ie2.expirydate, 'YYYY-MM-DD') as expirydate, i2.amount from ingredientexpireon ie2, ingredient i2,
+      purchases p 
+      where i2.dateproduced=ie2.dateproduced and i2.ingredientname=ie2.ingredientname and i2.ingredientid in 
+      (select p.ingredientid from purchases p where p.userid in (
+      select userid from employee where restaurantid=$1)) order by expirydate desc`,
         [restaurantid],(err,result)=>{
             if(err){
               throw err;
             }
             else{
               res.render('ingredient', {dish: array, data:result.rows});
-              // res.render('ingredientExpiry',{
-              //   data: result.rows
-              // })
             }
-        });
-        // res.render('ingredient', {dish: array});
+        });        
       })
+        // res.render('ingredient', {dish: array});
     })
   });
 });
@@ -194,69 +201,103 @@ router.get('/profile', function (req, res) {
 });
 
 router.post('/report',function(req,res){
-  
+  client.query("select * from yearlyexpensereport",
+  (error,result)=>{
+      if(error) throw error;
+      console.log(result.rows[0]);
+      res.render('report', {data: result.rows[0]});
+    }) 
 });
 
-
-router.post('/adddish',function(req,res){
+router.post('/adddish', function (req, res) {
   var d = new Date(req.body.avail);
-  
-  console.log("add new dish" + " " + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
+
+  console.log("add new dish" + " " + req.body.dish + " " + req.body.price + " " + req.body.avail);
   client.query("INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) values($1,$2,$3,$4)",
-    [restaurantid,req.body.dish,req.body.price,d],(error,result)=>{
-      if(error){
-        console.log(error);
-        
-      }
-      else{
-        res.redirect('/main');
-      }
-    })  
-});
-
-router.post('/updatedish',function(req,res){
-  var d = new Date(req.body.avail);
-
-  console.log("update dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
-  
-  client.query("update dish set price = $1,availableuntil = $2 where dishname = $3 and restaurantid = $4",
-    [req.body.price,d,req.body.dish,restaurantid],(error,result)=>{
-      if(error){
+    [restaurantid, req.body.dish, req.body.price, d], (error, result) => {
+      if (error) {
         console.log(error)
-        res.render('/disherr',{msg: "Dish isn't exist."});
-        res.status(401);
       }
-      else{
-        res.redirect('/main')
+      else {
+        res.redirect('/main');
       }
     })
 });
 
-router.post('/deletedish',function(req,res){
-  console.log("delete dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
+router.post('/updatedish', function (req, res) {
+  var d = new Date(req.body.avail);
+  console.log("update dish " + req.body.dish + " " + req.body.price + " " + req.body.avail);
+
+  var name = '%' + req.body.dish.toLowerCase() + '%';
+
+  client.query("select * from dish where lower(dishname) like $1 and restaurantid = $2",
+    [name, restaurantid], (result1, error1) => {
+      if (error1) {
+        console.log(error1);
+        res.render('disherr', { msg: "Dish isn't exist." });
+      }
+      else if (result1.rows.length === 0) {
+        res.render('disherr', { msg: "Dish isn't exist." });
+      }
+      else {
+        client.query("update dish set price = $1,availableuntil = $2 where dishname = $3 and restaurantid = $4",
+          [req.body.price, d, req.body.dish, restaurantid], (error, result) => {
+            if (error) {
+              console.log(error)
+              res.render('disherr', { msg: "Dish isn't exist." });
+              res.status(401);
+            }
+            else {
+              res.redirect('/main')
+            }
+          })
+      }
+    })
+});
+
+router.post('/deletedish', function (req, res) {
+  console.log("delete dish" + req.body.dish);
+  var name = '%' + req.body.dish.toLowerCase() + '%';
   
-  client.query("delete from dish where dishname = $1 and restaurantid = $2",
-  [req.body.dish,restaurantid],(error,result)=>{
-    if(error){
-      console.log(error)
-      res.render('/disherr',{msg: "Dish isn't exist."});
-      res.status(401);
-    }
-    else{
-      res.redirect('/main');
-    }
-  })
+  client.query("select * from dish where lower(dishname) like $1 and restaurantid = $2",
+    [name, restaurantid], (result1, error1) => {
+      if (error1) {
+        console.log(error1);
+        res.render('disherr', { msg: "Dish isn't exist." });
+      }
+      else if (result1.rows.length === 0) {
+        res.render('disherr', { msg: "Dish isn't exist." });
+      }
+      else {
+        client.query("delete from dish where dishname = $1 and restaurantid = $2",
+          [req.body.dish, restaurantid], (error, result) => {
+            if (error) {
+              console.log(error)
+              res.render('disherr', { msg: "Dish isn't exist." });
+              res.status(401);
+            }
+            else {
+              res.redirect('/main');
+            }
+          })
+      }
+    });
 });
 
 router.get('/expiry', function (req, res) {
     console.log("View Expiry Date of Ingredients");
-  client.query(`select ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, 
-  ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (select i.ingredientname, 
-    i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in (Select iu.ingredientid from dish d, 
-      ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid group by iu.ingredientid)) 
-      union select distinct ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, 
-      ingredient i where i.dateproduced=ie.dateproduced and i.ingredientname=ie.ingredientname and i.ingredientid 
-      in (select userid from employee where restaurantid=$1)`,
+  client.query(`select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
+  to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
+  ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
+  (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in 
+    (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid 
+    group by iu.ingredientid))
+union select distinct i2.ingredientid, ie2.ingredientname, to_char( ie2.dateproduced, 'DD/MM/YYYY') as dateproduced, 
+to_char( ie2.expirydate, 'YYYY-MM-DD') as expirydate, i2.amount from ingredientexpireon ie2, ingredient i2,
+purchases p 
+where i2.dateproduced=ie2.dateproduced and i2.ingredientname=ie2.ingredientname and i2.ingredientid in 
+(select p.ingredientid from purchases p where p.userid in (
+select userid from employee where restaurantid=$1)) order by expirydate desc`,
   [restaurantid],(err,result)=>{
       if(err){
         throw err;
@@ -276,39 +317,68 @@ router.get('/expiry', function (req, res) {
   // res.render('ingredientExpiry', {data: d});
 });
 
+// router.post('/purchase', function (req, res) {
+//   console.log(req.body.name + " " + req.body.amount + req.body.expire +"purchase");
+//   var expireDate = new Date(req.body.expire);
+//   var d = new Date();
+
+
+//   client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
+//   [req.body.name,req.body.amount,d],(error,result)=>{
+//     if(error) throw error;
+//     else{
+//       client.query("select max(ingredientid) from ingredient",
+//         [],(error1,result1)=>{
+//           if(error1) throw error1;
+//           else{
+//             var id = result1.rows[0].max;
+//             console.log(result1.rows[0]);
+//             client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
+//               [id,userid,req.body.amount,req.body.price,d],(error2,result2)=>{
+//                 if(error2) throw error2;
+//                 client.query("insert into ingredientexpireon values($1,to_date($2,'YYYY-MM-DD'),now())",
+//                 [req.body.name,req.body.expire],(error3,result3)=>{
+//                   if(error3){
+//                     console.log("ingredient exists");
+//                   }
+//                   res.redirect('/profile');
+//                 })
+//             })
+//           }
+//       })
+//     }
+//   }) 
+// });
+
 router.post('/purchase', function (req, res) {
-  console.log(req.body.name + " " + req.body.amount + req.body.expire +"purchase");
+  console.log(req.body.name + " " + req.body.amount + req.body.expire + "purchase");
   var expireDate = new Date(req.body.expire);
   var d = new Date();
 
+  client.query("insert into ingredientexpireon values($1,$2,$3)",
+    [req.body.name, expireDate, d], (error3, result3) => {
 
-  client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
-  [req.body.name,req.body.amount,d],(error,result)=>{
-    if(error) throw error;
-    else{
-      client.query("select max(ingredientid) from ingredient",
-        [],(error1,result1)=>{
-          if(error1) throw error1;
-          else{
-            var id = result1.rows[0].max;
-            console.log(result1.rows[0]);
-            client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
-              [id,userid,req.body.amount,req.body.price,d],(error2,result2)=>{
-                if(error2) throw error2;
-                client.query("insert into ingredientexpireon values($1,to_date($2,'YYYY-MM-DD'),now())",
-                [req.body.name,req.body.expire],(error3,result3)=>{
-                  if(error3){
-                    console.log("ingredient exists");
-                  }
-                  res.redirect('/profile');
-                })
-            })
+      client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
+        [req.body.name, req.body.amount, d], (error, result) => {
+          if (error) throw error;
+          else {
+            client.query("select max(ingredientid) from ingredient",
+              (error1, result1) => {
+                if (error1) throw error1;
+                else {
+                  var id = result1.rows[0].max;
+                  console.log(id + " " + userid);
+                  client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
+                    [id, userid, req.body.amount, req.body.price, d], (error2, result2) => {
+                      if (error2) console.log(error2);
+                      res.redirect('/profile');
+                    })
+                }
+              })
           }
-      })
-    }
-  }) 
+        })
+    })
 });
-
 
 router.post('/use', function (req, res) {
   console.log(req.body.before + " " + req.body.amount + req.body.dish +"use");
@@ -341,7 +411,7 @@ router.post('/use', function (req, res) {
 
 
 router.post('/name', function (req, res) {
-  client.query("select * from restaurant where restaurantname like $1",['%'+req.body.name+'%'],(err,result)=>{
+  client.query("select * from restaurant where LOWER(restaurantname) like $1",['%'+req.body.name.toLowerCase()+'%'],(err,result)=>{
     if(err) throw err;
     else {
       console.log(result.rows)
@@ -398,7 +468,6 @@ router.post('/allergy', function (req, res) {
     client.query("select * from restaurant where restaurantid in (select restaurantid from rest_dish_ingr order by count limit 10)",(err2,result2)=>{
       if(err2) throw err2;
       client.query("drop view rest_dish_ingr",(err3,result3)=>{
-        if(err3) throw err3;
         res.render('restlist',result2.rows)
       })
     })

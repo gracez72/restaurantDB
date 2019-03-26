@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION update_rating()
 RETURNS trigger AS $update_rating$
 BEGIN
 	UPDATE Restaurant
-		SET rating = (SELECT AVG(Rating)
+		SET rating = (SELECT AVG(Rating)::int
 					  FROM Reviews
 					  WHERE RestaurantID = NEW.RestaurantID)
 			WHERE RestaurantID = NEW.RestaurantID;
@@ -387,9 +387,18 @@ where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (
 select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in
 (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=1 and iu.dishid=d.dishid group by iu.ingredientid)
 )
-union select distinct ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i
-where i.dateproduced=ie.dateproduced and i.ingredientname=ie.ingredientname and i.ingredientid in (
-select userid from employee where restaurantid=1
+
+
+select i.ingredientid, ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from 
+        ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
+        (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in 
+          (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid 
+          group by iu.ingredientid))
+		  union select distinct i2.ingredientid, ie2.ingredientname, ie2.dateproduced, ie2.expirydate, i2.amount from ingredientexpireon ie2, ingredient i2,
+purchases p 
+where i2.dateproduced=ie2.dateproduced and i2.ingredientname=ie2.ingredientname and i2.ingredientid in 
+(select p.ingredientid from purchases p where p.userid in (
+select userid from employee where restaurantid=$1)
 );
 
 insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values(29,2,100,1000, now())

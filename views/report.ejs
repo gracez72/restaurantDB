@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RestaruantDB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+
+            <table class="res">
+             <tr>
+               <td class="ratt">Total Employees: <%= data.totalemployees %></td>
+             </tr>
+             <tr>
+                <td class="ratt">Total Employee Wages: <%= data.totalemployeewages %></td>
+            </tr>
+             <tr>
+               <td class="ratt">Total Bonus wages: <%= data.totalbonuswages %></td>
+             </tr>
+             <tr>
+                <td class="ratt">Total Ingredient Prices: <%= data.totalingredientprices %></td>
+              </tr>
+            </table>
+            <form class="example" action="/profile" method="GET">
+                <button type="submit">Back</button>
+              </form>
+        
+  </body>
+</html>
