@@ -475,6 +475,7 @@ router.post('/allergy', function (req, res) {
     client.query("select * from restaurant where restaurantid in (select restaurantid from rest_dish_ingr order by count limit 10)",(err2,result2)=>{
       if(err2) throw err2;
       client.query("drop view rest_dish_ingr",(err3,result3)=>{
+        if(err3) throw err3;
         res.render('restlist',{data:result2.rows})
       })
     })
