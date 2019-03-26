@@ -53,6 +53,7 @@ router.get('/restaurant', function (req, res) {
       client.query("select * from dish where restaurantid = $1",[req.query.rid],(err3,result3)=>{
         if(err3) throw err3;
         res.render('restaurant',{
+          rid: req.query.rid,
           name:result.rows[0].restaurantname,
           type:result.rows[0].restauranttype,
           addr:result.rows[0].restaurantaddress,
@@ -176,11 +177,11 @@ router.post('/report',function(req,res){
   
 });
 
-router.post('/Back',function(req,res){
+router.get('/Back',function(req,res){
   res.redirect('/employee');
 });
 
-router.post('/add',function(req,res){
+router.get('/add',function(req,res){
   var d = new Date(req.body.avail);
   
   console.log("add new dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
@@ -195,7 +196,7 @@ router.post('/add',function(req,res){
     })  
 });
 
-router.post('/update',function(req,res){
+router.get('/update',function(req,res){
   var d = new Date(req.body.avail);
 
   console.log("update dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
@@ -213,7 +214,7 @@ router.post('/update',function(req,res){
     })
 });
 
-router.post('/delete',function(req,res){
+router.get('/delete',function(req,res){
   console.log("delete dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
   
   client.query("delete from dish where dishname = $1 and restaurantid = $2",
@@ -329,15 +330,16 @@ router.post('/rating', function (req, res) {
 });
 
 router.post('/review', function (req, res) {
-  console.log(req.body.review + req.body.rating + " review ");
+  console.log(req.body.review + req.body.rating + "  "+ req.query.rid);
   var d = new Date();
 
   client.query("insert into reviews(ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID) values($1,$2,$3,$4,$5,$6)",
-  [d,req.body.review,req.body.rating,username,restaurantid,userid]
+  [d,req.body.review,req.body.rating,req.body.name,req.query.rid,userid]
   ,(error,result)=>{
       if(error)  throw error;
       else {
         console.log(result.rows);
+        res.redirect('/restaurant?rid='+req.query.rid);
       }
   });
 });

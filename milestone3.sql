@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION update_rating()
 RETURNS trigger AS $update_rating$
 BEGIN
 	UPDATE Restaurant
-		SET rating = (SELECT SUM(Rating)
+		SET rating = (SELECT SUM(Rating)/count(*)
 					  FROM Reviews
 					  WHERE RestaurantID = NEW.RestaurantID)
 			WHERE RestaurantID = NEW.RestaurantID;

@@ -49,7 +49,7 @@
                  <td class="rdesc">Date <%= dat.reviewdate %></td>
                </tr>
                <tr>
-                 <td class="rdesc">Comments: <%= dat.reviewdesccription %></td>
+                 <td class="rdesc">Comments: <%= dat.reviewdescription %></td>
                </tr>
               </table>
             </form>
@@ -57,11 +57,10 @@
   
             
           
-    <form class = "example" action="/review" method="POST">
+    <form class = "example" action="/review?rid=<%= rid%>" method="POST">
       <input type="text" placeholder="Name" name="name">
       <input type="text" placeholder="rating" name="rating">
         <textarea rows="3" cols="150" type="text" placeholder="Write reviews for this restaruant" name="review"></textarea>
-        <input type="text" placeholder="Input ratings" name="rating">
         <button type="submit">Submit</button>
     </form>
   </body>
