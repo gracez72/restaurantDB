@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>RestaruantDB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+  <h1>RestaruantDB:Employee</h1>
+  <h3>Position: <%= position%></h3>
+  <h3>Working in: <%= restaurantname%></h3>
+  <h3>Years of Experience: <%= yearsexperience%></h3>
+  <h3>Average Salary: <%= avgsalary%></h3>
+  <form class="button" action="/ingredient" method="GET">
+    <button type="submit">View Ingredient of Dishes</button>
+  </form>
+
+  <form class="button" action="/expiry" method="GET">
+    <button type="submit">View Expiry Date of Ingredients</button>
+  </form>
+  <form class="button" action="/report" method="POST">
+    <button type="submit">View Expense Report</button>
+  </form>
+  <form class="example" action="/purchase" method="POST">
+    <p>Update Ingredient Purchased</p>
+    <input type="text" placeholder="Ingredient Name" name="name">
+    <input type="text" placeholder="Amount" name="amount">
+    <input type="text" placeholder="Expire Date" name="expire">
+    <input type="text" placeholder="Price" name="price">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form class="example" action="/adddish" method = "POST">
+    <p>Add Dishes</p>
+      <input type="text" placeholder="Dish Name" name="dish">
+      <input type="text" placeholder="Price " name="price">
+      <input type="text" placeholder="Available Until " name="avail">
+    <button type="submit">Add</button>
+  </form>
+
+  <form class="example" action="/updatedish" method = "POST">
+    <p>Update Dishes</p>
+      <input type="text" placeholder="Dish Name" name="dish">
+      <input type="text" placeholder="Price " name="price">
+      <input type="text" placeholder="Available Until " name="avail">
+    <button type="submit">Update</button>
+  </form>
+
+  <form class="example" action="/deletedish" method = "POST">
+    <p>Delete Dishes</p>
+      <input type="text" placeholder="Dish Name" name="dish">
+    <button type="submit">Delete</button>
+  </form>
+
+  <form class="example" action="/main" method="GET">
+    <button type="submit">Back</button>
+  </form>
+</body>
+
+</html>

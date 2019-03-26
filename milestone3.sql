@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION update_rating()
 RETURNS trigger AS $update_rating$
 BEGIN
 	UPDATE Restaurant
-		SET rating = (SELECT SUM(Rating)/count(*)
+		SET rating = (SELECT AVG(Rating)
 					  FROM Reviews
 					  WHERE RestaurantID = NEW.RestaurantID)
 			WHERE RestaurantID = NEW.RestaurantID;
@@ -169,13 +169,6 @@ BEGIN
 									FROM Employee e, HourlyPay hp, Restaurant r
 									WHERE e.Position = hp.Position and r.restaurantid = e.restaurantid)
 			WHERE RestaurantID = NEW.RestaurantID;
-		
-	UPDATE YearlyExpenseReport
-		SET TotalIngredientPrices = (SELECT SUM(p.totalprice)
-									FROM Purchases p, Employee e, Restaurant r
-									WHERE  r.restaurantid = e.restaurantid and e.UserID = p.UserID and e.restaurantid = r.restaurantid)
-			WHERE RestaurantID = NEW.RestaurantID;
-	
 	UPDATE YearlyExpenseReport
 		SET TotalEmployees = (SELECT COUNT(*)
 									FROM Employee
@@ -191,11 +184,22 @@ BEGIN
 END;
 $update_expense_report$ LANGUAGE 'plpgsql'
 
-CREATE TRIGGER expense_report_update
+CREATE OR REPLACE FUNCTION update_ingredient_price()
+RETURNS trigger AS $update_ingredient_price$
+BEGIN
+	UPDATE YearlyExpenseReport
+		SET TotalIngredientPrices = (SELECT SUM(p.totalprice)
+									FROM Purchases p, Employee e, Restaurant r
+									WHERE  r.restaurantid = e.restaurantid and e.UserID = p.UserID and e.restaurantid = r.restaurantid);
+	RETURN NEW;
+END;
+$update_ingredient_price$ LANGUAGE 'plpgsql'
+
+CREATE TRIGGER update_employee
 	AFTER INSERT
 	ON Employee
 	FOR EACH ROW
-	EXECUTE PROCEDURE update_expense_report();
+	EXECUTE PROCEDURE update_employee();
 
 CREATE TRIGGER expense_report_update
 	AFTER INSERT
@@ -205,15 +209,15 @@ CREATE TRIGGER expense_report_update
 
 CREATE TRIGGER expense_report_update
 	AFTER INSERT
-	ON Purchases
-	FOR EACH ROW
-	EXECUTE PROCEDURE update_expense_report();
-
-CREATE TRIGGER expense_report_update
-	AFTER INSERT
 	ON BonusPay
 	FOR EACH ROW
 	EXECUTE PROCEDURE update_expense_report();
+
+CREATE TRIGGER update_ingredient_price
+	AFTER INSERT
+	ON Purchases
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_ingredient_price();
 
 
 CREATE TABLE Purchases (
@@ -238,14 +242,17 @@ CREATE TABLE Reviews (
 	FOREIGN KEY(UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
-CREATE FUNCTION 
-	negative_review() RETURNS TRIGGER AS $BODY$
+CREATE FUNCTION negative_review() RETURNS trigger AS $BODY$
 	BEGIN
 	IF new.rating >= 0
 		RETURN NEW;
 	ELSE
 		RAISE EXCEPTION 'Invalid rating';
 	END IF;
+	RETURN NULL;
+	END;
+	$BODY$
+	LANGUAGE 'plpgsql'
 
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-10-10', 'good', 4, 'yolo', 1, 2);
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-01-10', 'very good', 5, 'yoyo', 1, 4);
@@ -375,8 +382,14 @@ SELECT * FROM Ingredient;
 SELECT * FROM IngredientsUsed;
 
 
-select ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i
+select distinct ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i
 where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (
 select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in
 (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=1 and iu.dishid=d.dishid group by iu.ingredientid)
+)
+union select distinct ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i
+where i.dateproduced=ie.dateproduced and i.ingredientname=ie.ingredientname and i.ingredientid in (
+select userid from employee where restaurantid=1
 );
+
+insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values(29,2,100,1000, now())

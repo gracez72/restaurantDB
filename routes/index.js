@@ -52,15 +52,19 @@ router.get('/restaurant', function (req, res) {
       if(err2) throw err2;
       client.query("select * from dish where restaurantid = $1",[req.query.rid],(err3,result3)=>{
         if(err3) throw err3;
-        res.render('restaurant',{
-          rid: req.query.rid,
-          name:result.rows[0].restaurantname,
-          type:result.rows[0].restauranttype,
-          addr:result.rows[0].restaurantaddress,
-          desc:result.rows[0].restaurantdescription,
-          rating:result.rows[0].rating,
-          review:result2.rows,
-          dish:result3.rows,
+        client.query("select * from images where restaurantid = $1", [req.query.rid],(err4,result4)=>{
+          if(err4) throw err4;
+          res.render('restaurant',{
+            rid: req.query.rid,
+            name:result.rows[0].restaurantname,
+            type:result.rows[0].restauranttype,
+            addr:result.rows[0].restaurantaddress,
+            desc:result.rows[0].restaurantdescription,
+            rating:result.rows[0].rating,
+            review:result2.rows,
+            dish:result3.rows,
+            image:result4.rows
+          })
         })
       })
     })
@@ -72,14 +76,19 @@ router.get('/employees', function (req, res) {
   res.render('employees', { id: 2, position: 'chef', yearsexperience:2, avgsalary: 1000});
 });
 
+router.get('/chef', function (req, res) {
+
+  res.render('chef', { id: 2, position: 'chef', yearsexperience: 2, avgsalary: 1000 });
+});
+
 router.get('/ingredient', function (req, res) {
 
-  client.query(`create view new as (select IU.dishid,count(*) from ingredientsused IU where IU.dishid in (select D.dishid from dish D where D.restaurantid= ${restaurantid} )group by IU.dishid)`,(err,result)=>{
+  client.query(`create view newi as (select IU.dishid,count(*) from ingredientsused IU where IU.dishid in (select D.dishid from dish D where D.restaurantid= ${restaurantid} )group by IU.dishid)`,(err,result)=>{
     if(err) throw err;
-    client.query("select dish.dishname, new.*, i.ingredientname, iu.amountused, i.ingredientid from dish, new, ingredientsused IU, ingredient i where new.dishid=dish.dishid and iu.dishid=dish.dishid and i.ingredientid=iu.ingredientid",(err2,result2)=>{
+    client.query("select dish.dishname, newi.*, i.ingredientname, iu.amountused, i.ingredientid from dish, newi, ingredientsused IU, ingredient i where newi.dishid=dish.dishid and iu.dishid=dish.dishid and i.ingredientid=iu.ingredientid",(err2,result2)=>{
       if(err2) throw err2;
 
-      client.query("drop view new", (err3,result3)=>{
+      client.query("drop view newi", (err3,result3)=>{
         if(err3) throw err3;
         if(result2.rows.length === 0){
 
@@ -145,13 +154,24 @@ router.get('/profile', function (req, res) {
         restaurantid = result.rows[0].restaurantid;
         console.log(result.rows[0])
         console.log(result2.rows[0])
+        var string = result.rows[0].position;
 
-        res.render('employees', {
-          restaurantname: result.rows[0].restaurantname,
-          position: result.rows[0].position,
-          avgsalary: Math.round(result2.rows[0].avg),
-          yearsexperience: result.rows[0].yearsexperience,
-        })
+        if (string.indexOf("Chef") != -1 || string.indexOf("chef") != -1) {
+          res.render('chef', {
+            restaurantname: result.rows[0].restaurantname,
+            position: result.rows[0].position,
+            avgsalary: Math.round(result2.rows[0].avg),
+            yearsexperience: result.rows[0].yearsexperience,
+          })
+        }
+        else {
+          res.render('employees', {
+            restaurantname: result.rows[0].restaurantname,
+            position: result.rows[0].position,
+            avgsalary: Math.round(result2.rows[0].avg),
+            yearsexperience: result.rows[0].yearsexperience,
+          })
+        }
       })
     })
   }
@@ -177,26 +197,24 @@ router.post('/report',function(req,res){
   
 });
 
-router.get('/Back',function(req,res){
-  res.redirect('/employee');
-});
 
-router.get('/add',function(req,res){
+router.post('/adddish',function(req,res){
   var d = new Date(req.body.avail);
   
-  console.log("add new dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
+  console.log("add new dish" + " " + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
   client.query("INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) values($1,$2,$3,$4)",
     [restaurantid,req.body.dish,req.body.price,d],(error,result)=>{
       if(error){
-        console.log(error)
+        console.log(error);
+        
       }
       else{
-        res.redirect('/employee');
+        res.redirect('/main');
       }
     })  
 });
 
-router.get('/update',function(req,res){
+router.post('/updatedish',function(req,res){
   var d = new Date(req.body.avail);
 
   console.log("update dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
@@ -209,12 +227,12 @@ router.get('/update',function(req,res){
         res.status(401);
       }
       else{
-        res.redirect('/employee')
+        res.redirect('/main')
       }
     })
 });
 
-router.get('/delete',function(req,res){
+router.post('/deletedish',function(req,res){
   console.log("delete dish" + req.body.dish + " " +  req.body.price + " "  + req.body.avail);
   
   client.query("delete from dish where dishname = $1 and restaurantid = $2",
@@ -225,14 +243,20 @@ router.get('/delete',function(req,res){
       res.status(401);
     }
     else{
-      res.redirect('/employee');
+      res.redirect('/main');
     }
   })
 });
 
 router.get('/expiry', function (req, res) {
     console.log("View Expiry Date of Ingredients");
-  client.query("select ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid group by iu.ingredientid))",
+  client.query(`select ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, 
+  ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (select i.ingredientname, 
+    i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in (Select iu.ingredientid from dish d, 
+      ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid group by iu.ingredientid)) 
+      union select distinct ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, 
+      ingredient i where i.dateproduced=ie.dateproduced and i.ingredientname=ie.ingredientname and i.ingredientid 
+      in (select userid from employee where restaurantid=$1)`,
   [restaurantid],(err,result)=>{
       if(err){
         throw err;
@@ -257,41 +281,62 @@ router.post('/purchase', function (req, res) {
   var expireDate = new Date(req.body.expire);
   var d = new Date();
 
-  client.query("insert into ingredientexpireon values($1,$2,$3)",
-    [req.body.name,expireDate,d],(error3,result3)=>{
-      if(error3) throw error3;
 
-      client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
-      [req.body.name,req.body.amount,d],(error,result)=>{
-        if(error) throw error;
-        else{
-          client.query("select max(ingredientid) from ingredient",
-            [],(error1,result1)=>{
-              if(error1) throw error1;
-              else{
-                var id = result1.rows[0].ingredientid;
-                client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
-                  [id,userid,req.body.amount,req.body.price,d],(error2,result2)=>{
-                    if(error2) throw error2;
+  // client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
+  // [req.body.name,req.body.amount,d],(error,result)=>{
+  //   if(error) throw error;
+  //   else{
+      client.query("select max(ingredientid) from ingredient",
+        [],(error1,result1)=>{
+          if(error1) throw error1;
+          else{
+            var id = result1.rows[0].max;
+            console.log(result1.rows[0]);
+            client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
+              [id,userid,req.body.amount,req.body.price,d],(error2,result2)=>{
+                if(error2) throw error2;
+                client.query("insert into ingredientexpireon values($1,to_date($2,'YYYY-MM-DD'),now())",
+                [req.body.name,req.body.expire],(error3,result3)=>{
+                  if(error3){
+                    console.log("ingredient exists");
+                  }
+                  res.redirect('/profile');
                 })
-              }
-          })
-        }
-    })
-  })
-  res.redirect('/profile');
+            })
+          }
+      })
+  //   }
+  // }) 
 });
 
 
 router.post('/use', function (req, res) {
-  console.log(req.body.ingredient + " " + req.body.amount + req.body.dish +"use");
-  client.query("update ingredientsused set ingredientid=$1, amountused=$2 where ingredientid=$3 and dishid=(select dishid from dish where dishname=$4 and restaurantid=$5 limit 1)",
-    [req.body.after, req.body.amount, req.body.before, req.body.dish, restaurantid],(error,result)=>{
+  console.log(req.body.before + " " + req.body.amount + req.body.dish +"use");
+  if(req.body.before == '-1'){
+    client.query("insert into ingredientsused (ingredientid, amountused, dishid) values($1, $2, (select dishid from dish where dishname=$3 and restaurantid=$4 limit 1))",
+    [req.body.after, req.body.amount, req.body.dish, restaurantid],(error,result)=>{
       if(error) throw error;
       else{
         res.redirect('/ingredient');
       }
     })
+  } else if(req.body.after == '-1'){
+    client.query("delete from ingredientsused where ingredientid=$1 and dishid=(select dishid from dish where dishname=$2 and restaurantid=$3 limit 1)",
+    [req.body.before, req.body.dish, restaurantid],(error,result)=>{
+      if(error) throw error;
+      else{
+        res.redirect('/ingredient');
+      }
+    })
+  } else {
+    client.query("update ingredientsused set ingredientid=$1, amountused=$2 where ingredientid=$3 and dishid=(select dishid from dish where dishname=$4 and restaurantid=$5 limit 1)",
+      [req.body.after, req.body.amount, req.body.before, req.body.dish, restaurantid],(error,result)=>{
+        if(error) throw error;
+        else{
+          res.redirect('/ingredient');
+        }
+      })
+  }
 });
 
 
@@ -439,4 +484,14 @@ router.post('/register', function (req, res) {
     }
   );
 });
+
+
+router.post('/image', function (req, res) {
+  client.query(`insert into images values($1,$2,$3)`, [req.query.rid, req.body.tag, req.body.url]
+    ,(err,result)=>{
+    if (err) throw err;
+    res.redirect('/restaurant?rid='+req.query.rid);
+  })
+});
+
 module.exports = router;

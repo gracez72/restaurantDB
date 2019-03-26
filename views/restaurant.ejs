@@ -6,7 +6,7 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-
+      
             <table class="res">
              <tr>
                <td class="rname"><%= name %></td>
@@ -20,6 +20,16 @@
                <td class="rdesc">Description: <%= desc %></td>
              </tr>
             </table>
+
+            <h2>Images</h2>
+            <div style="margin-left:10%; width:80%;">
+            <% image.forEach(function(dat) { %>
+              <div style="max-width: 250px; display: inline-flex; border-style: solid; margin:10px; border-width: 1px;">
+                <div style="display: flex;"><%= dat.tag %></div>
+                <div style="display: flex;"><img src="<%= dat.link%>" height="100" width="100"/></div>
+              </div>
+            <% }); %>
+          </div>
             
             <h2>Dishes</h2>
             <% dish.forEach(function(dat) { %>
@@ -34,7 +44,6 @@
                  <td class="rdesc">Available Until: <%= dat.availableuntil %></td>
                </tr>
               </table>
-            </form>
             <% }); %>
 
             <h2>Reviews</h2>
@@ -52,10 +61,13 @@
                  <td class="rdesc">Comments: <%= dat.reviewdescription %></td>
                </tr>
               </table>
-            </form>
             <% }); %>
   
-            
+            <form class = "example" action="/image?rid=<%= rid%>" method="POST">
+              <input type="text" placeholder="TAG" name="tag">
+              <input type="text" placeholder="image url" name="url">
+                <button type="submit">Upload Image</button>
+            </form>      
           
     <form class = "example" action="/review?rid=<%= rid%>" method="POST">
       <input type="text" placeholder="Name" name="name">
