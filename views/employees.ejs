@@ -15,7 +15,7 @@
         <button type="submit">View Ingredient of Dishes</button>
       </form>
 
-      <form class="button" action="/expiry" method="POST">
+      <form class="button" action="/expiry" method="GET">
         <button type="submit">View Expiry Date of Ingredients</button>
       </form>
       <form class="button" action="/report" method="POST">
@@ -25,15 +25,20 @@
       <p>Update Ingredient Purchased</p>
       <input type="text" placeholder="Ingredient Name" name="name">
       <input type="text" placeholder="Amount" name="amount">
-      <button type="submit">Submit</button>
-    </form>
-    <form class = "example" action="/use" method="POST">
-      <p>Update Ingredient Used</p>
-      <input type="text" placeholder="Ingredient Name" name="name">
-      <input type="text" placeholder="Amount" name="amount">
+      <input type="text" placeholder="Expire Date" name="expire">
+      <input type="text" placeholder="Price" name="price">
       <button type="submit">Submit</button>
     </form>
 
+    <form class = "example">
+      <p>Add Update Dishes</p>
+      <input type = "text" placeholder="Dish Name" name = "dish">
+      <input type = "text" placeholder="Price " name = "price">
+      <input type = "text" placeholder="Available Until " name = "avail">
+      <button type="submit" formaction="/add">Add</button>
+      <button type="submit" formaction="/update">Update</button>
+      <button type="submit" formaction="/delete">Delete</button>
+    </form>
     <form class="example" action="/main" method="GET">
       <button type="submit">Back</button>
     </form>

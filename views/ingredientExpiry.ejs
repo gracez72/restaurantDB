@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ingredient Expiry</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+      <h1>Ingredient Expiry Date</h1>
+
+      <% data.forEach(function(dat) { %>
+        <table class="res">
+            <tr>
+                <td class="ratt"><%= dat.ingredientname %></td>
+            </tr>
+         <tr>
+           <td class="rdesc">Date Produced: <%= dat.dateproduced %></td>
+           <td class="rdesc">Amount: <%= dat.amount %> </td>
+           <td class="rdesc">Date Expired: <%= dat.expirydate %> </td>
+         </tr>
+
+        </table>
+      <% }); %>
+
+      <form class="example" action="/profile" method="GET">
+        <button type="submit">Back</button>
+      </form>
+
+  </body>
+</html>

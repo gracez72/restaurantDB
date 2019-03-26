@@ -6,6 +6,24 @@ CREATE TABLE Users (
 	PRIMARY KEY(UserID)
 );
 
+-- Replace invalid UserNames
+CREATE OR REPLACE FUNCTION clean_userName()
+  RETURNS trigger AS
+$$
+BEGIN
+	NEW.UserName = LTRIM(NEW.UserName);
+	RETURN NEW;
+END;
+
+$$
+LANGUAGE 'plpgsql';
+
+CREATE TRIGGER check_User
+  AFTER INSERT
+  ON Users
+  FOR EACH ROW
+  EXECUTE PROCEDURE clean_userName();
+
 INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('Dianna', 'Dianna', 'hi');
 INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('Alice', 'Alice', 'password');
 INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('Bob', 'Bob', 'password');
@@ -19,8 +37,44 @@ CREATE TABLE Restaurant (
 	RestaurantType varchar(20),
 	RestaurantDescription varchar(255),
 	RestaurantAddress varchar(255) NOT NULL UNIQUE,
+	rating int DEFAULT 0,
 	RestaurantName varchar(40)
 );
+
+CREATE TABLE YearlyExpenseReport (
+	TotalEmployeeWages float DEFAULT 0.0,
+	TotalIngredientPrices float DEFAULT 0.0,
+	TotalEmployees int DEFAULT 0,
+	TotalBonusWages float DEFAULT 0.0,
+	RestaurantID int PRIMARY KEY,
+	FOREIGN KEY(RestaurantID) REFERENCES Restaurant ON DELETE CASCADE
+);
+
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (1);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (2);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (3);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (4);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (5);
+
+
+-- Update Restaurant Rating
+CREATE OR REPLACE FUNCTION update_rating()
+RETURNS trigger AS $update_rating$
+BEGIN
+	UPDATE Restaurant
+		SET rating = (SELECT SUM(Rating)
+					  FROM Reviews
+					  WHERE RestaurantID = NEW.RestaurantID)
+			WHERE RestaurantID = NEW.RestaurantID;
+	RETURN NEW;
+END;
+$update_rating$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER rating_updated
+	AFTER INSERT
+	ON Reviews
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_rating();
 
 CREATE TABLE Employee(
 	UserID int,
@@ -62,6 +116,25 @@ CREATE TABLE Customer (
 	FOREIGN KEY (UserID) REFERENCES Users ON DELETE CASCADE
 );
 
+-- Update Customer Rating Count
+CREATE OR REPLACE FUNCTION update_rating_count()
+RETURNS trigger AS $update_rating_count$
+BEGIN
+	UPDATE Customer
+		SET numReviews = (SELECT COUNT(*)
+							FROM Reviews
+							WHERE UserID = NEW.UserID)
+			WHERE UserID = NEW.UserID;
+	RETURN NEW;
+END;
+$update_rating_count$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER rating_count_updated
+	AFTER INSERT
+	ON Reviews
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_rating_count();
+
 CREATE TABLE IngredientExpireOn(
 	IngredientName varchar(255) NOT NULL, 
 	ExpiryDate Date, 
@@ -72,15 +145,82 @@ CREATE TABLE IngredientExpireOn(
 CREATE TABLE Ingredient(
 	IngredientID serial PRIMARY KEY,
 	IngredientName varchar(255) NOT NULL,
+	Price float NOT NULL,
 	Amount int,
 	DateProduced Date,
 	FOREIGN KEY (IngredientName, DateProduced) REFERENCES IngredientExpireOn ON DELETE CASCADE
 );
 
+CREATE TABLE IngredientsUsed (
+	IngredientID int,
+	DishID int,
+	AmountUsed int,
+	PRIMARY KEY (IngredientID, DishID),
+	FOREIGN KEY (IngredientID) REFERENCES Ingredient,
+	FOREIGN KEY (DishID) REFERENCES Dish
+);
+
+-- Update Yearly Expense Report
+CREATE OR REPLACE FUNCTION update_expense_report()
+RETURNS trigger AS $update_expense_report$
+BEGIN
+	UPDATE YearlyExpenseReport
+		SET TotalEmployeeWages = (SELECT SUM(hp.HourlyPay * 2880)
+									FROM Employee e, HourlyPay hp, Restaurant r
+									WHERE e.Position = hp.Position and r.restaurantid = e.restaurantid)
+			WHERE RestaurantID = NEW.RestaurantID;
+		
+	UPDATE YearlyExpenseReport
+		SET TotalIngredientPrices = (SELECT SUM(p.totalprice)
+									FROM Purchases p, Employee e, Restaurant r
+									WHERE  r.restaurantid = e.restaurantid and e.UserID = p.UserID and e.restaurantid = r.restaurantid)
+			WHERE RestaurantID = NEW.RestaurantID;
+	
+	UPDATE YearlyExpenseReport
+		SET TotalEmployees = (SELECT COUNT(*)
+									FROM Employee
+									WHERE restaurantid = NEW.restaurantid)
+			WHERE RestaurantID = NEW.RestaurantID;
+	
+	UPDATE YearlyExpenseReport
+		SET TotalBonusWages = (SELECT SUM(bp.bonuspay)
+									FROM Employee e, BonusPay bp, Restaurant r
+									WHERE e.Position = bp.Position and r.restaurantid = e.restaurantid)
+			WHERE RestaurantID = NEW.RestaurantID;
+	RETURN NEW;
+END;
+$update_expense_report$ LANGUAGE 'plpgsql'
+
+CREATE TRIGGER expense_report_update
+	AFTER INSERT
+	ON Employee
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_expense_report();
+
+CREATE TRIGGER expense_report_update
+	AFTER INSERT
+	ON HourlyPay
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_expense_report();
+
+CREATE TRIGGER expense_report_update
+	AFTER INSERT
+	ON Purchases
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_expense_report();
+
+CREATE TRIGGER expense_report_update
+	AFTER INSERT
+	ON BonusPay
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_expense_report();
+
+
 CREATE TABLE Purchases (
 	IngredientID int,
 	UserID int,
 	Amount int,
+	totalprice int,
 	PurchaseDate date,
 	PRIMARY KEY(IngredientID, UserID)
 );
@@ -98,12 +238,21 @@ CREATE TABLE Reviews (
 	FOREIGN KEY(UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
+CREATE FUNCTION 
+	negative_review() RETURNS TRIGGER AS $BODY$
+	BEGIN
+	IF new.rating >= 0
+		RETURN NEW;
+	ELSE
+		RAISE EXCEPTION 'Invalid rating';
+	END IF;
+
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-10-10', 'good', 4, 'yolo', 1, 2);
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-01-10', 'very good', 5, 'yoyo', 1, 4);
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2019-01-10', 'super good', 5, 'lolo', 1, 5);
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-11-10', 'bad', 2, 'anonymous', 3, 2);
 INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-12-10', 'super bad', 1, 'someone', 5, 2);
-
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-12-10', 'super bad', 1, 'someone', 5, 3);
 
 CREATE TABLE Dish (
 	DishID serial PRIMARY KEY ,
@@ -119,15 +268,12 @@ INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (2, '
 INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (4, 'Rice', 3, '2222-01-01');
 INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (4, 'Soup', 10, '2099-01-01');
 INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (3, 'Burger', 30, '2020-01-01');
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (1, 'Soup', 30, '2020-01-01');
+INSERT INTO IngredientsUsed VALUES (6, 6, 5);
 
-CREATE TABLE IngredientsUsed (
-	IngredientID int,
-	DishID int,
-	AmountUsed int,
-	PRIMARY KEY (IngredientID, DishID),
-	FOREIGN KEY (IngredientID) REFERENCES Ingredient,
-	FOREIGN KEY (DishID) REFERENCES Dish
-);
+
+update ingredientsused set ingredientid=6, amountused=3 where ingredientid=8 and 
+dishid=(select dishid from dish where dishname='Pasta' and restaurantid=1 limit 1)
 
 
 CREATE TABLE Images (
@@ -194,6 +340,7 @@ INSERT INTO Dish VALUES (4, 'Rice', 3, '2222-01-01');
 INSERT INTO Dish VALUES (4, 'Soup', 10, '2099-01-01');
 INSERT INTO Dish VALUES (3, 'Burger', 30, '2020-01-01');
 
+
 INSERT INTO Ingredient (IngredientName, Amount, DateProduced) VALUES ('Carrot', 5, '2019-02-25');
 INSERT INTO Ingredient  (IngredientName, Amount, DateProduced)  VALUES ('Apple', 20, '2019-03-25');
 INSERT INTO Ingredient  (IngredientName, Amount, DateProduced) VALUES ('Chicken', 5000, '2019-02-25');
@@ -227,3 +374,9 @@ SELECT * FROM IngredientExpireOn;
 SELECT * FROM Ingredient;
 SELECT * FROM IngredientsUsed;
 
+
+select ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i
+where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (
+select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in
+(Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=1 and iu.dishid=d.dishid group by iu.ingredientid)
+);
