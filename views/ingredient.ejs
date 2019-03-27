@@ -12,15 +12,19 @@
         <table class="res">
             <tr>
                 <td class="ratt"><%= dat.dishname %></td>
+                <%  if(dat.count == null) dat.count=0; %>
                 <td class="ratt"># of Ingredients: <%= dat.count %></td>
+                <td class="ratt">Price: <%= dat.price %></td>
             </tr>
-        <% dat.ingredient.forEach(function(i) { %>
+        <% if(dat.ingredient != null) {
+          dat.ingredient.forEach(function(i) { %>
          <tr>
             <td class="rdesc"><%= i.ingredientname %></td>
            <td class="rdesc">id: <%= i.ingredientid %></td>
            <td class="rdesc">Amount: <%= i.amount %> </td>
          </tr>
-         <% }); %>
+         <% }); 
+        } %>
 
         </table>
       <% }); %>

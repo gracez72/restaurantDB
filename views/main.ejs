@@ -30,5 +30,21 @@
       <button type="submit">Top 10 Rating</button>
     </form>
 
+    <h2>Top Users Recognition</h2>
+    <table class="res">
+      <tr>
+        <td class="ratt">Username</td>
+        <td class="ratt">Number of Reviews</td>
+      </tr>
+     </table>
+    <% user.forEach(function(dat) { %>
+      <table class="res">
+        <tr>
+          <td class="ratt"><%= dat.username %></td>
+          <td class="ratt"><%= dat.count %></td>
+        </tr>
+       </table>
+    <% }); %>
+
   </body>
 </html>

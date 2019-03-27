@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION update_rating()
 RETURNS trigger AS $update_rating$
 BEGIN
 	UPDATE Restaurant
-		SET rating = (SELECT AVG(Rating)::int
+		SET rating = (SELECT AVG(Rating)
 					  FROM Reviews
 					  WHERE RestaurantID = NEW.RestaurantID)
 			WHERE RestaurantID = NEW.RestaurantID;
@@ -97,6 +97,8 @@ CREATE TABLE HourlyPay(
 	HourlyPay int NOT NULL,
 	YearsExperience int,
 	RestaurantID int, 	
+	UserID int,
+	FOREIGN KEY(UserID) REFERENCES User ON DELETE CASCADE;
 	FOREIGN KEY(RestaurantID) REFERENCES Restaurant ON DELETE CASCADE,
 	PRIMARY KEY(Position, YearsExperience, RestaurantID)
 );
@@ -161,57 +163,94 @@ CREATE TABLE IngredientsUsed (
 );
 
 -- Update Yearly Expense Report
-CREATE OR REPLACE FUNCTION update_expense_report()
-RETURNS trigger AS $update_expense_report$
+CREATE OR REPLACE FUNCTION update_bonus_wages()
+RETURNS trigger AS $update_bonus_wages$
 BEGIN
-	UPDATE YearlyExpenseReport
-		SET TotalEmployeeWages = (SELECT SUM(hp.HourlyPay * 2880)
-									FROM Employee e, HourlyPay hp, Restaurant r
-									WHERE e.Position = hp.Position and r.restaurantid = e.restaurantid)
-			WHERE RestaurantID = NEW.RestaurantID;
-	UPDATE YearlyExpenseReport
-		SET TotalEmployees = (SELECT COUNT(*)
-									FROM Employee
-									WHERE restaurantid = NEW.restaurantid)
-			WHERE RestaurantID = NEW.RestaurantID;
-	
-	UPDATE YearlyExpenseReport
 		SET TotalBonusWages = (SELECT SUM(bp.bonuspay)
 									FROM Employee e, BonusPay bp, Restaurant r
 									WHERE e.Position = bp.Position and r.restaurantid = e.restaurantid)
 			WHERE RestaurantID = NEW.RestaurantID;
 	RETURN NEW;
 END;
-$update_expense_report$ LANGUAGE 'plpgsql'
+$update_bonus_wages$ LANGUAGE 'plpgsql'
+
+CREATE TRIGGER update_bonus_wages
+	AFTER INSERT
+	ON BonusPay
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_bonus_wages();
+
+	
+CREATE TRIGGER update_bonus_wages
+	AFTER INSERT
+	ON Employee
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_bonus_wages();
+
+
+CREATE OR REPLACE FUNCTION update_total_employee_wages()
+RETURNS trigger AS $update_total_employee_wages$
+BEGIN
+	UPDATE YearlyExpenseReport
+		SET TotalEmployeeWages = (SELECT SUM(hp.HourlyPay * 2880)
+									FROM Employee e, HourlyPay hp, Restaurant r
+									WHERE e.Position = hp.Position and 
+									hp.userid = e.userid and
+									e.yearsexperience = hp.yearsexperience and 
+									r.restaurantid = e.restaurantid and 
+									r.restaurantid = NEW.restaurantid)
+			WHERE RestaurantID = NEW.RestaurantID;
+	RETURN NEW;
+END;
+$update_total_employee_wages$ LANGUAGE 'plpgsql'
+
+
+CREATE TRIGGER update_total_employee_wages
+	AFTER INSERT
+	ON HourlyPay
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_total_employee_wages();
+
+	
+CREATE TRIGGER update_total_employee_wages
+	AFTER INSERT
+	ON Employee
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_total_employee_wages();
+
+CREATE OR REPLACE FUNCTION update_employee_count()
+RETURNS trigger AS $update_employee_count$
+BEGIN
+	UPDATE YearlyExpenseReport
+		SET TotalEmployees = (SELECT COUNT(*)
+									FROM Employee
+									WHERE restaurantid = NEW.restaurantid)
+			WHERE RestaurantID = NEW.RestaurantID;
+	RETURN NEW;
+END;
+$update_employee_count$ LANGUAGE 'plpgsql'
+
+
+CREATE TRIGGER update_employee_count
+	AFTER INSERT
+	ON Employee
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_employee_count();
 
 CREATE OR REPLACE FUNCTION update_ingredient_price()
 RETURNS trigger AS $update_ingredient_price$
 BEGIN
 	UPDATE YearlyExpenseReport
-		SET TotalIngredientPrices = (SELECT SUM(p.totalprice)
-									FROM Purchases p, Employee e, Restaurant r
-									WHERE  r.restaurantid = e.restaurantid and e.UserID = p.UserID and e.restaurantid = r.restaurantid);
+		SET TotalIngredientPrices = (SELECT totalprice 
+									FROM (SELECT SUM(p.totalprice)
+										FROM Purchases p, Employee e, Restaurant r
+										WHERE  r.restaurantid = e.restaurantid and p.userid = e.userid
+										GROUP BY e.restaurantid););
 	RETURN NEW;
 END;
-$update_ingredient_price$ LANGUAGE 'plpgsql'
+$update_ingredient_price$ LANGUAGE 'plpgsql';
 
-CREATE TRIGGER update_employee
-	AFTER INSERT
-	ON Employee
-	FOR EACH ROW
-	EXECUTE PROCEDURE update_employee();
 
-CREATE TRIGGER expense_report_update
-	AFTER INSERT
-	ON HourlyPay
-	FOR EACH ROW
-	EXECUTE PROCEDURE update_expense_report();
-
-CREATE TRIGGER expense_report_update
-	AFTER INSERT
-	ON BonusPay
-	FOR EACH ROW
-	EXECUTE PROCEDURE update_expense_report();
 
 CREATE TRIGGER update_ingredient_price
 	AFTER INSERT
@@ -221,12 +260,15 @@ CREATE TRIGGER update_ingredient_price
 
 
 CREATE TABLE Purchases (
+	ID serial primary key,
 	IngredientID int,
 	UserID int,
 	Amount int,
 	totalprice int,
 	PurchaseDate date,
-	PRIMARY KEY(IngredientID, UserID)
+	foreign key (UserID) references Users(UserID) on delete cascade,
+	foreign key (IngredientID) references Ingredient on delete CASCADE
+
 );
 
 
@@ -402,3 +444,11 @@ select userid from employee where restaurantid=$1)
 );
 
 insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values(29,2,100,1000, now())
+
+
+create view u as  select * from users u 
+where not exists ((select r.restaurantid from restaurant r) 
+except (select re.restaurantid from reviews re where re.userid = u.userid));
+
+create view test as select count(*),r2.userid from reviews r2 group by r2.userid;
+

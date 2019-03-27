@@ -26,7 +26,15 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/main', function (req, res) {
-  res.render('main', { title: 'Express' });
+
+  // client.query("select * from users u where not exists ((select r.restaurantid from restaurant r) except (select re.restaurantid from reviews re where re.userid = u.userid))",
+  client.query("select username,count from test,u where test.userid = u.userid",
+  [],(error,result)=>{
+    if(error) console.log(error);
+    else{
+      res.render('main', { user: result.rows });
+    }
+  })
 });
 
 router.get('/ingredientExpiry', function (req, res) {
@@ -86,10 +94,11 @@ router.get('/ingredient', function (req, res) {
 
   client.query(`create view newi as (select IU.dishid,count(*) from ingredientsused IU where IU.dishid in (select D.dishid from dish D where D.restaurantid= ${restaurantid} )group by IU.dishid)`,(err,result)=>{
     if(err) throw err;
-    client.query("select dish.dishname, newi.*, i.ingredientname, iu.amountused, i.ingredientid from dish, newi, ingredientsused IU, ingredient i where newi.dishid=dish.dishid and iu.dishid=dish.dishid and i.ingredientid=iu.ingredientid",(err2,result2)=>{
+    client.query(`(select d2.dishname, price, null as dishid , null as count, null as ingredientname, null as amountused, null as ingredientid from dish d2, restaurant r2 where d2.restaurantid = ${restaurantid} and d2.dishid not in (select dishid from ingredientsused)) union (select dish.dishname, dish.price, newi.*, i.ingredientname, iu.amountused, i.ingredientid from dish, newi, ingredientsused IU, ingredient i where newi.dishid=dish.dishid and iu.dishid=dish.dishid and i.ingredientid=iu.ingredientid) order by dishname`,(err2,result2)=>{
       if(err2) throw err2;
       client.query("drop view newi",(err3,result3)=>{
         if(err3) throw err3;
+        // console.log(result2.rows);
         if(result2.rows.length === 0){
           
         }
@@ -103,8 +112,9 @@ router.get('/ingredient', function (req, res) {
             if(result2.rows[i].dishname != temp){
               var x = {
                 dishname:temp,
-                count: result2.rows[i].count,
+                count: result2.rows[i-1].count,
                 ingredient:newsub,
+                price: result2.rows[i-1].price
               }
               array.push(x);
               newsub = [{ingredientname:result2.rows[i].ingredientname,amount:result2.rows[i].amountused, ingredientid:result2.rows[i].ingredientid}];
@@ -122,9 +132,9 @@ router.get('/ingredient', function (req, res) {
             ingredient:newsub
           }
           array.push(x);
-          console.log(newsub);
+          // console.log(newsub);
         }
-        console.log(array);
+        // console.log(array);
         client.query(`select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
         to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
         ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
@@ -160,8 +170,8 @@ router.get('/profile', function (req, res) {
       (err2,result2)=>{
         if(err2) throw err2;
         restaurantid = result.rows[0].restaurantid;
-        console.log(result.rows[0])
-        console.log(result2.rows[0])
+        // console.log(result.rows[0])
+        // console.log(result2.rows[0])
         var string = result.rows[0].position;
 
         if (string.indexOf("Chef") != -1 || string.indexOf("chef") != -1) {
@@ -186,7 +196,7 @@ router.get('/profile', function (req, res) {
   else{
     client.query("select * from customer where userid = $1",[userid],(err,result)=>{
       if(err) throw err;
-      console.log(result.rows[0]);
+      // console.log(result.rows[0]);
       client.query("select * from users where userid = $1",[userid],
       (err2,result2)=>{
         if(err2) throw err2;
@@ -220,7 +230,7 @@ router.post('/adddish', function (req, res) {
         console.log(error)
       }
       else {
-        res.redirect('/main');
+        res.redirect('/profile');
       }
     })
 });
@@ -231,15 +241,15 @@ router.post('/updatedish', function (req, res) {
 
   var name = '%' + req.body.dish.toLowerCase() + '%';
 
-  client.query("select * from dish where lower(dishname) like $1 and restaurantid = $2",
+  client.query("select * from dish where lower(dishname) like '%$1%' and restaurantid = $2",
     [name, restaurantid], (result1, error1) => {
       if (error1) {
         console.log(error1);
         res.render('disherr', { msg: "Dish isn't exist." });
       }
-      else if (result1.rows.length === 0) {
-        res.render('disherr', { msg: "Dish isn't exist." });
-      }
+      // else if (result1.rows.length === 0) {
+      //   res.render('disherr', { msg: "Dish isn't exist." });
+      // }
       else {
         client.query("update dish set price = $1,availableuntil = $2 where dishname = $3 and restaurantid = $4",
           [req.body.price, d, req.body.dish, restaurantid], (error, result) => {
@@ -249,7 +259,7 @@ router.post('/updatedish', function (req, res) {
               res.status(401);
             }
             else {
-              res.redirect('/main')
+              res.redirect('/profile');
             }
           })
       }
@@ -260,17 +270,17 @@ router.post('/deletedish', function (req, res) {
   console.log("delete dish" + req.body.dish);
   var name = '%' + req.body.dish.toLowerCase() + '%';
   
-  client.query("select * from dish where lower(dishname) like $1 and restaurantid = $2",
-    [name, restaurantid], (result1, error1) => {
+  client.query("select * from dish where lower(dishname) like '%$1%' and restaurantid = $2",
+    [name.toLowerCase(), restaurantid], (result1, error1) => {
       if (error1) {
         console.log(error1);
         res.render('disherr', { msg: "Dish isn't exist." });
       }
-      else if (result1.rows.length === 0) {
-        res.render('disherr', { msg: "Dish isn't exist." });
-      }
+      // else if (result1.rows.length() === 0) {
+      //   res.render('disherr', { msg: "Dish isn't exist." });
+      // }
       else {
-        client.query("delete from dish where dishname = $1 and restaurantid = $2",
+        client.query("delete from dish where lower(dishname) like $1 and restaurantid = $2",
           [req.body.dish, restaurantid], (error, result) => {
             if (error) {
               console.log(error)
@@ -278,7 +288,7 @@ router.post('/deletedish', function (req, res) {
               res.status(401);
             }
             else {
-              res.redirect('/main');
+              res.redirect('/profile');
             }
           })
       }
@@ -310,46 +320,9 @@ select userid from employee where restaurantid=$1)) order by expirydate desc`,
       }
   });
 
-  // var d=[
-  //   {ingredientname: "potato", amount: 100, expirydate: '2017-2-2'},
-  //   {ingredientname: "potato", amount: 100, expirydate: '2017-2-2'},
-  // ];
 
-  // res.render('ingredientExpiry', {data: d});
 });
 
-// router.post('/purchase', function (req, res) {
-//   console.log(req.body.name + " " + req.body.amount + req.body.expire +"purchase");
-//   var expireDate = new Date(req.body.expire);
-//   var d = new Date();
-
-
-//   client.query("insert into ingredient(IngredientName, Amount, DateProduced) values($1,$2,$3)",
-//   [req.body.name,req.body.amount,d],(error,result)=>{
-//     if(error) throw error;
-//     else{
-//       client.query("select max(ingredientid) from ingredient",
-//         [],(error1,result1)=>{
-//           if(error1) throw error1;
-//           else{
-//             var id = result1.rows[0].max;
-//             console.log(result1.rows[0]);
-//             client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
-//               [id,userid,req.body.amount,req.body.price,d],(error2,result2)=>{
-//                 if(error2) throw error2;
-//                 client.query("insert into ingredientexpireon values($1,to_date($2,'YYYY-MM-DD'),now())",
-//                 [req.body.name,req.body.expire],(error3,result3)=>{
-//                   if(error3){
-//                     console.log("ingredient exists");
-//                   }
-//                   res.redirect('/profile');
-//                 })
-//             })
-//           }
-//       })
-//     }
-//   }) 
-// });
 
 router.post('/purchase', function (req, res) {
   console.log(req.body.name + " " + req.body.amount + req.body.expire + "purchase");
@@ -371,7 +344,7 @@ router.post('/purchase', function (req, res) {
                   console.log(id + " " + userid);
                   client.query("insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values($1,$2,$3,$4, $5)",
                     [id, userid, req.body.amount, req.body.price, d], (error2, result2) => {
-                      if (error2) console.log(error2);
+                      if (error2) throw error2;
                       res.redirect('/profile');
                     })
                 }
@@ -384,28 +357,25 @@ router.post('/purchase', function (req, res) {
 router.post('/use', function (req, res) {
   console.log(req.body.before + " " + req.body.amount + req.body.dish +"use");
   if(req.body.before == '-1'){
-    client.query("insert into ingredientsused (ingredientid, amountused, dishid) values($1, $2, (select dishid from dish where dishname=$3 and restaurantid=$4 limit 1))",
-    [req.body.after, req.body.amount, req.body.dish, restaurantid],(error,result)=>{
+    client.query("insert into ingredientsused (ingredientid, amountused, dishid) values($1, $2, (select dishid from dish where lower(dishname)=$3 and restaurantid=$4 limit 1))",
+    [req.body.after, req.body.amount, req.body.dish.toLowerCase(), restaurantid],(error,result)=>{
       if(error) throw error;
       else{
         res.redirect('/ingredient');
       }
     })
   } else if(req.body.after == '-1'){
-    client.query("delete from ingredientsused where ingredientid=$1 and dishid=(select dishid from dish where dishname=$2 and restaurantid=$3 limit 1)",
-    [req.body.before, req.body.dish, restaurantid],(error,result)=>{
+    client.query("delete from ingredientsused where ingredientid=$1 and dishid=(select dishid from dish where lower(dishname)=$2 and restaurantid=$3 limit 1)",
+    [req.body.before, req.body.dish.toLowerCase(), restaurantid],(error,result)=>{
       if(error) throw error;
       else{
         res.redirect('/ingredient');
       }
     })
   } else {
-    client.query("update ingredientsused set ingredientid=$1, amountused=$2 where ingredientid=$3 and dishid=(select dishid from dish where dishname=$4 and restaurantid=$5 limit 1)",
-      [req.body.after, req.body.amount, req.body.before, req.body.dish, restaurantid],(error,result)=>{
-        if(error) throw error;
-        else{
+    client.query("update ingredientsused set ingredientid=$1, amountused=$2 where ingredientid=$3 and dishid=(select dishid from dish where lower(dishname)=$4 and restaurantid=$5 limit 1)",
+      [req.body.after, req.body.amount, req.body.before, req.body.dish.toLowerCase(), restaurantid],(error,result)=>{
           res.redirect('/ingredient');
-        }
       })
   }
 });
@@ -447,10 +417,9 @@ router.post('/rating', function (req, res) {
 
 router.post('/review', function (req, res) {
   console.log(req.body.review + req.body.rating + "  "+ req.query.rid);
-  var d = new Date();
 
-  client.query("insert into reviews(ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID) values($1,$2,$3,$4,$5,$6)",
-  [d,req.body.review,req.body.rating,req.body.name,req.query.rid,userid]
+  client.query("insert into reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID) values(now(),$1,$2,$3,$4,$5)",
+  [req.body.review,req.body.rating,req.body.name,req.query.rid,userid]
   ,(error,result)=>{
       if(error)  throw error;
       else {
@@ -491,7 +460,7 @@ router.post('/cuisine', function (req, res) {
       }
     }
   );
-  res.redirect('/main');
+  res.redirect('/profile');
 });
 
 
@@ -564,6 +533,7 @@ router.post('/register', function (req, res) {
 
 
 router.post('/image', function (req, res) {
+  console.log(req.query.rid);
   client.query(`insert into images values($1,$2,$3)`, [req.query.rid, req.body.tag, req.body.url]
     ,(err,result)=>{
     if (err) {
