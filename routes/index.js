@@ -98,7 +98,7 @@ router.get('/ingredient', function (req, res) {
       if(err2) throw err2;
       client.query("drop view newi",(err3,result3)=>{
         if(err3) throw err3;
-        // console.log(result2.rows);
+        console.log(result2.rows);
         if(result2.rows.length === 0){
           
         }
@@ -129,7 +129,8 @@ router.get('/ingredient', function (req, res) {
           var x = {
             dishname:temp,
             count: result2.rows[i-1].count,
-            ingredient:newsub
+            ingredient:newsub,
+            price: result2.rows[i-1].price
           }
           array.push(x);
           // console.log(newsub);
