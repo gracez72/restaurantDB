@@ -56,9 +56,9 @@ router.get('/restaurant', function (req, res) {
   console.log("here " + req.query.rid);
   client.query("select * from restaurant where restaurantid = $1", [req.query.rid],(err,result)=>{
     if(err) throw err;
-    client.query("select * from reviews where restaurantid = $1", [req.query.rid],(err2,result2)=>{
+    client.query("select to_char(reviewdate, 'YYYY-MM-DD') as reviewdate, reviewdescription, rating, customername from reviews where restaurantid = $1", [req.query.rid],(err2,result2)=>{
       if(err2) throw err2;
-      client.query("select * from dish where restaurantid = $1",[req.query.rid],(err3,result3)=>{
+      client.query("select dishid, dishname, price, to_char(availableuntil, 'YYYY-MM-DD') as availableuntil from dish where restaurantid = $1",[req.query.rid],(err3,result3)=>{
         if(err3) throw err3;
         client.query("select * from images where restaurantid = $1", [req.query.rid],(err4,result4)=>{
           if(err4) throw err4;
@@ -212,7 +212,7 @@ router.get('/profile', function (req, res) {
 });
 
 router.post('/report',function(req,res){
-  client.query("select * from yearlyexpensereport",
+  client.query("select * from yearlyexpensereport where restaurantid=$1", [restaurantid],
   (error,result)=>{
       if(error) throw error;
       console.log(result.rows[0]);
@@ -486,7 +486,7 @@ router.post('/login', function (req, res) {
       client.query("select userid from users where accountname= $1 and userid in (select userid from employee)",[req.body.AccName],
       (error, results) =>{
         if(error) throw error;
-        else if(results.rows.length == 1)
+        else if(results.rows.length === 1)
         {
           //this is a employee
           userType = 'employee';
