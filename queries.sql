@@ -1,5 +1,17 @@
-select username,count from test,u where test.userid = u.userid;
+-- DIVISION
+-- Find Users who have written reviews for all restaurants
+create view u as  select * from users u 
+where not exists ((select r.restaurantid from restaurant r) 
+except (select re.restaurantid from reviews re where re.userid = u.userid));
 
+create view test as select count(*),r2.userid from reviews r2 group by r2.userid;
+
+CREATE VIEW Topusers as select username,count from test,u where test.userid = u.userid;
+
+-- /*PROJECTION*/
+select * from topusers;
+
+-- /*SELECTION*/
 select * from restaurant where restaurantid = 1;
 
 select to_char(reviewdate, 'YYYY-MM-DD') as reviewdate, reviewdescription, rating, customername from reviews where restaurantid = 1;
@@ -13,6 +25,8 @@ create view newi as (select IU.dishid,count(*) from ingredientsused IU where IU.
 (select d2.dishname, price, null as dishid , null as count, null as ingredientname, null as amountused, null as ingredientid from dish d2, restaurant r2 where d2.restaurantid = ${restaurantid} and d2.dishid not in (select dishid from ingredientsused)) union (select dish.dishname, dish.price, newi.*, i.ingredientname, iu.amountused, i.ingredientid from dish, newi, ingredientsused IU, ingredient i where newi.dishid=dish.dishid and iu.dishid=dish.dishid and i.ingredientid=iu.ingredientid) order by dishname;
 
 drop view newi;
+
+-- /*JOIN*/
 select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
         to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
         ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
@@ -28,6 +42,7 @@ select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY'
 
 select e.*, r.restaurantname as restaurantname from employee e, restaurant r where e.userid = $1 and e.restaurantid = r.restaurantid;
 
+-- /*AGGREGATION*/
 select h.position, avg(h.hourlypay) as avg from hourlypay h where h.position = $1 group by h.position;
 
 select * from customer where userid = $1;
@@ -36,14 +51,17 @@ select * from users where userid = $1;
 
 select * from yearlyexpensereport where restaurantid=$1;
 
+-- /*INSERTION*/
 INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) values($1,$2,$3,$4);
 
 select * from dish where lower(dishname) like '%$1%' and restaurantid = $2;
 
+-- /*UPDATE*/
 update dish set price = $1,availableuntil = $2 where lower(dishname) like $3 and restaurantid = $4
 
 select * from dish where lower(dishname) like '%$1%' and restaurantid = $2;
 
+-- /*DELETE*/
 delete from dish where lower(dishname) like $1 and restaurantid = $2;
 
 insert into ingredientexpireon values($1,$2,$3);
@@ -68,6 +86,7 @@ select * from restaurant order by rating desc limit 10;
 
 insert into reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID) values(now(),$1,$2,$3,$4,$5);
 
+-- /*NESTED  AGGREGATION WITH GROUP BY*/
 create view rest_dish_ingr as (select r1.restaurantid, count(*) from restaurant r1, 
   dish d, ingredientsused iu, ingredient i where r1.restaurantid = d.restaurantid and d.dishid = iu.dishid 
   and iu.ingredientid = i.ingredientid and LOWER(i.ingredientname) like \'${allergy}\' group by r1.restaurantid 

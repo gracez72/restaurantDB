@@ -391,12 +391,15 @@ INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, r
 INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (5, 6, 2, 50, '2019-02-25', 4);
 
 -- views
+-- DIVISION
+-- Find Users who have written reviews for all restaurants
 create view u as  select * from users u 
 where not exists ((select r.restaurantid from restaurant r) 
 except (select re.restaurantid from reviews re where re.userid = u.userid));
 
 create view test as select count(*),r2.userid from reviews r2 group by r2.userid;
 
+CREATE VIEW Topusers as select username,count from test,u where test.userid = u.userid;
 
 SELECT * FROM Users;
 SELECT * FROM Employee;

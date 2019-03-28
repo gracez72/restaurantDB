@@ -10,6 +10,7 @@ var restaurantid;
 var userType;
 var client = new pg.Client(conString);
 
+//Conect to Postsql Database
 client.connect(function(err) {
   if (err) {
     console.error('Database connection failed: ' + err.stack);
@@ -25,10 +26,12 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+/*Main Page after login/resgiter */
 router.get('/main', function (req, res) {
 
-  // client.query("select * from users u where not exists ((select r.restaurantid from restaurant r) except (select re.restaurantid from reviews re where re.userid = u.userid))",
-  client.query("select username,count from test,u where test.userid = u.userid",
+  /*PROJECTION*/
+  //Users who have written reviews for all restaurants are top users
+  client.query("select * from topusers",
   [],(error,result)=>{
     if(error) console.log(error);
     else{
@@ -41,6 +44,15 @@ router.get('/ingredientExpiry', function (req, res) {
   res.render('ingredientExpiry', { title: 'Express' });
 });
 
+
+/*
+* Render a List of Restaurants
+* @param: Restaurant ID
+* @param: Restaurant Type
+* @param: Restaurant Address
+* @param: Restaurant Description
+* @param: Restaurant Ratings 
+*/
 router.get('/restlist', function (req, res) {
   var d= [
     { id: 1, name: "Rest 1", type: "estern", addr: "1234 rd", desc: "good", rating:4 },
@@ -51,9 +63,20 @@ router.get('/restlist', function (req, res) {
   res.render('restlist', { data: d });
 });
 
-
+/*
+* Render Specific Restaurant  
+* @param: Restaurant ID
+* @param: Restaurant Type
+* @param: Restaurant Address
+* @param: Restaurant Description
+* @param: Restaurant Ratings 
+* @param: Restaurant Dish
+* @param: Restaurant Image
+* @param: Restaurant Status
+*/
 router.get('/restaurant', function (req, res) {
   console.log("here " + req.query.rid);
+  /*SELECTION*/
   client.query("select * from restaurant where restaurantid = $1", [req.query.rid],(err,result)=>{
     if(err) throw err;
     client.query("select to_char(reviewdate, 'YYYY-MM-DD') as reviewdate, reviewdescription, rating, customername from reviews where restaurantid = $1", [req.query.rid],(err2,result2)=>{
@@ -80,16 +103,35 @@ router.get('/restaurant', function (req, res) {
   })
 });
 
+//render employees pages who isn't chef 
 router.get('/employees', function (req, res) {
 
   res.render('employees', { id: 2, position: 'chef', yearsexperience:2, avgsalary: 1000});
 });
 
+//render employees who is chef 
 router.get('/chef', function (req, res) {
 
   res.render('chef', { id: 2, position: 'chef', yearsexperience: 2, avgsalary: 1000 });
 });
 
+/*
+* Render Dish ingredients and All Ingredients for Employees
+*
+* Dish Ingredients:
+* @param: Dish Name
+* @param: Dish Price
+* @param: Count of Ingredient Used
+* @param: Ingredient Used Name  
+* @param: Ingredient Used Amount 
+*
+* All Ingredients the restaurant have
+* @param: Ingredient Name 
+* @param: Ingredient ID 
+* @param: Amount 
+* @param: Date Produced
+* @param: Date Expired
+*/
 router.get('/ingredient', function (req, res) {
 
   client.query(`create view newi as (select IU.dishid,count(*) from ingredientsused IU where IU.dishid in (select D.dishid from dish D where D.restaurantid= ${restaurantid} )group by IU.dishid)`,(err,result)=>{
@@ -136,6 +178,7 @@ router.get('/ingredient', function (req, res) {
           // console.log(newsub);
         }
         // console.log(array);
+        /*JOIN QUERY*/
         client.query(`select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
         to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
         ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
@@ -162,7 +205,21 @@ router.get('/ingredient', function (req, res) {
   });
 });
 
-
+/*
+* Render corresponding Profile page for employee or customer
+*
+* Employees
+* @param: Restaurant Name 
+* @param: Positiong
+* @param: Average Salary of Restaurant
+* @param: Years of Experiences
+*
+* Customer:
+* @param: Preference
+* @param: Number of Reviews they write 
+* @param: User Name 
+* @param: Account Name 
+*/
 router.get('/profile', function (req, res) {
   if(userType == 'employee'){
     client.query("select e.*, r.restaurantname as restaurantname from employee e, restaurant r where e.userid = $1 and e.restaurantid = r.restaurantid",[userid],(err,result)=>{
@@ -175,6 +232,7 @@ router.get('/profile', function (req, res) {
         // console.log(result2.rows[0])
         var string = result.rows[0].position;
 
+        //check whether the employee is chef or not 
         if (string.indexOf("Chef") != -1 || string.indexOf("chef") != -1) {
           res.render('chef', {
             restaurantname: result.rows[0].restaurantname,
@@ -212,6 +270,13 @@ router.get('/profile', function (req, res) {
   }
 });
 
+/*
+* Generate Expense Report for Restaurant
+* @param: Total Number of Employees
+* @param: Total Employee Wages
+* @param: Total Bonus Wages 
+* @param: Total Ingredient Prices
+*/
 router.post('/report',function(req,res){
   client.query("select * from yearlyexpensereport where restaurantid=$1", [restaurantid],
   (error,result)=>{
@@ -221,10 +286,17 @@ router.post('/report',function(req,res){
     }) 
 });
 
+/*
+* Chef Adds Dish 
+* @param: Dish Name 
+* @param: Dish Price 
+* @param: Available Date 
+*/
 router.post('/adddish', function (req, res) {
   var d = new Date(req.body.avail);
 
   console.log("add new dish" + " " + req.body.dish + " " + req.body.price + " " + req.body.avail);
+  /*INSERT OPERATION*/
   client.query("INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) values($1,$2,$3,$4)",
     [restaurantid, req.body.dish, req.body.price, d], (error, result) => {
       if (error) {
@@ -236,6 +308,12 @@ router.post('/adddish', function (req, res) {
     })
 });
 
+/*
+* Chef Updates Dish 
+* @param: Dish Name 
+* @param: Dish Price 
+* @param: Available Date 
+*/
 router.post('/updatedish', function (req, res) {
   var d = new Date(req.body.avail);
   console.log("update dish " + req.body.dish + " " + req.body.price + " " + req.body.avail);
@@ -248,10 +326,8 @@ router.post('/updatedish', function (req, res) {
         console.log(error1);
         res.render('disherr', { msg: "Dish isn't exist." });
       }
-      // else if (result1.rows.length === 0) {
-      //   res.render('disherr', { msg: "Dish isn't exist." });
-      // }
       else {
+        /*UPDATE OPERATION*/
         client.query("update dish set price = $1,availableuntil = $2 where lower(dishname) like $3 and restaurantid = $4",
           [req.body.price, d, req.body.dish.toLowerCase(), restaurantid], (error, result) => {
             if (error) {
@@ -267,6 +343,10 @@ router.post('/updatedish', function (req, res) {
     })
 });
 
+/*
+* Chef Deletes Dish 
+* @param: Dish Name 
+*/
 router.post('/deletedish', function (req, res) {
   console.log("delete dish" + req.body.dish);
   var name = '%' + req.body.dish.toLowerCase() + '%';
@@ -277,10 +357,8 @@ router.post('/deletedish', function (req, res) {
         console.log(error1);
         res.render('disherr', { msg: "Dish isn't exist." });
       }
-      // else if (result1.rows.length() === 0) {
-      //   res.render('disherr', { msg: "Dish isn't exist." });
-      // }
       else {
+        /*DELETE OPERATION*/
         client.query("delete from dish where lower(dishname) like $1 and restaurantid = $2",
           [req.body.dish.toLowerCase(), restaurantid], (error, result) => {
             if (error) {
@@ -296,8 +374,17 @@ router.post('/deletedish', function (req, res) {
     });
 });
 
+/*
+* Employees View Expiry Date of Ingredients
+* @param: Ingredient Name 
+* @param: Ingredient ID 
+* @param: Amount 
+* @param: Date Produced
+* @param: Date Expired
+*/
 router.get('/expiry', function (req, res) {
     console.log("View Expiry Date of Ingredients");
+    /*JOIN QUERY*/
   client.query(`select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
   to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
   ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
@@ -325,6 +412,13 @@ select userid from employee where restaurantid=$1)) order by expirydate desc`,
 });
 
 
+/*
+* Employees Update Ingredient Purchased
+* @param: Ingredient  Name 
+* @param: Amount
+* @param: Expiry Date
+* @param: Price
+*/ 
 router.post('/purchase', function (req, res) {
   console.log(req.body.name + " " + req.body.amount + req.body.expire + "purchase");
   var expireDate = new Date(req.body.expire);
@@ -337,6 +431,7 @@ router.post('/purchase', function (req, res) {
         [req.body.name, req.body.amount, d], (error, result) => {
           if (error) throw error;
           else {
+            /*Aggregate Operation*/
             client.query("select max(ingredientid) from ingredient",
               (error1, result1) => {
                 if (error1) throw error1;
@@ -355,9 +450,17 @@ router.post('/purchase', function (req, res) {
     })
 });
 
+/*
+* Employee Updates Ingredient Used 
+* @param: Dish Name 
+* @param: Ingredient ID Before
+* @param: Ingredient ID After
+* @param: Used Amount
+*/
 router.post('/use', function (req, res) {
   console.log(req.body.before + " " + req.body.amount + req.body.dish +"use");
   if(req.body.before == '-1'){
+    /*Insert OPeration*/
     client.query("insert into ingredientsused (ingredientid, amountused, dishid) values($1, $2, (select dishid from dish where lower(dishname)=$3 and restaurantid=$4 limit 1))",
     [req.body.after, req.body.amount, req.body.dish.toLowerCase(), restaurantid],(error,result)=>{
       if(error) throw error;
@@ -381,7 +484,7 @@ router.post('/use', function (req, res) {
   }
 });
 
-
+//Users Search Restaurant by Name 
 router.post('/name', function (req, res) {
   client.query("select * from restaurant where LOWER(restaurantname) like $1",['%'+req.body.name.toLowerCase()+'%'],(err,result)=>{
     if(err) throw err;
@@ -392,6 +495,8 @@ router.post('/name', function (req, res) {
   })
 });
 
+
+//Users Search Restaurant by Type 
 router.post('/type', function (req, res) {
   console.log(req.body.type + " type ");
   client.query("select * from restaurant where lower(restauranttype) like $1",
@@ -404,6 +509,7 @@ router.post('/type', function (req, res) {
   });
 });
 
+//Users Search Restaurant By Rating 
 router.post('/rating', function (req, res) {
   console.log(req.body.rating + " rating ");
   client.query("select * from restaurant order by rating desc limit 10"
@@ -416,6 +522,12 @@ router.post('/rating', function (req, res) {
   });
 });
 
+/*
+* Users Writes Reviews for Specific Restaurant
+* @param: Name 
+* @param: Rating 
+* @param: Review Description
+*/
 router.post('/review', function (req, res) {
   console.log(req.body.review + req.body.rating + "  "+ req.query.rid);
 
@@ -430,10 +542,13 @@ router.post('/review', function (req, res) {
   });
 });
 
+//Users Search Restuarant Based on Allergy 
 router.post('/allergy', function (req, res) {
   //req.body.allergy
   var allergy = req.body.allergy.toLowerCase();
   console.log(allergy);
+
+  /*NESTED AGGREGATION WITH GROUP BY*/
   client.query(`create view rest_dish_ingr as (select r1.restaurantid, count(*) from restaurant r1, 
   dish d, ingredientsused iu, ingredient i where r1.restaurantid = d.restaurantid and d.dishid = iu.dishid 
   and iu.ingredientid = i.ingredientid and LOWER(i.ingredientname) like \'${allergy}\' group by r1.restaurantid 
@@ -452,6 +567,7 @@ router.post('/allergy', function (req, res) {
   })
 });
 
+//Customers Update Preferred Cuisine 
 router.post('/cuisine', function (req, res) {
   console.log(req.body.cuisine + " cuisine ");
   client.query("update customer set preference = $1 where userid = $2",
@@ -464,17 +580,23 @@ router.post('/cuisine', function (req, res) {
   res.redirect('/profile');
 });
 
-
+/*
+* Login page 
+* @param: Account Name 
+* @param: Password 
+*/
 router.post('/login', function (req, res) {
   client.query("select userid,accountname,userpassword from users where accountname = $1",[req.body.AccName], (error, results) =>{
     if(error) {
       res.render('loginerr',{msg:'User does not exist'});
 
     }
+    //account does not exists
     else if(results.rows.length === 0){
       res.render('loginerr',{msg:'Account Does Not Exist'})
       res.status(401);
     }
+    //password incorrect 
     else if(results.rows[0].userpassword !=req.body.password){
       console.log("password incorrect");
       res.render('loginerr',{msg:'password incorrect'})
@@ -505,6 +627,12 @@ router.post('/login', function (req, res) {
   })
 });
 
+/*
+* Register page 
+* @param: Account Name 
+* @param: User Name 
+* @param: Password 
+*/ 
 router.post('/register', function (req, res) {
   client.query("INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ($1, $2, $3)",
     [req.body.AccName,req.body.Name,req.body.password],(error,results)=>{
@@ -532,7 +660,11 @@ router.post('/register', function (req, res) {
   );
 });
 
-
+/*
+* Users Insert Image to Restaurant
+* @param: Tage 
+* @param: Image URL
+*/
 router.post('/image', function (req, res) {
   console.log(req.query.rid);
   client.query(`insert into images values($1,$2,$3)`, [req.query.rid, req.body.tag, req.body.url]
