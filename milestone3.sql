@@ -24,13 +24,6 @@ CREATE TRIGGER check_User
   FOR EACH ROW
   EXECUTE PROCEDURE clean_userName();
 
-INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('Dianna', 'Dianna', 'hi');
-INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('Alice', 'Alice', 'password');
-INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('Bob', 'Bob', 'password');
-INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('carol', 'Carol', 'password5');
-INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('ethan', 'Ethan', 'passwords');
-INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('fred', 'Fred', 'strongpassword');
-INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('gargantuan', 'Gargantuan', 'passwords');
 
 CREATE TABLE Restaurant (
 	RestaurantID serial PRIMARY KEY,
@@ -40,12 +33,6 @@ CREATE TABLE Restaurant (
 	rating int DEFAULT 0,
 	RestaurantName varchar(40)
 );
-
-INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Korean', 'good food', '1234 BBQ Street', 'BBQueue Up');
-INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Australia', 'kangaroo', '1234 Kangaroo Street', 'The Kangaroo Chef');
-INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Chinese', 'good food', '1234 Wok Street', 'Wok You Looking At');
-INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Western', 'good food', '1234 Wild West Street', 'Old Saloon');
-INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Fusion', 'good food', '1234 Lemonade Street', 'Just Lemonade');
 
 
 CREATE TABLE YearlyExpenseReport (
@@ -58,12 +45,6 @@ CREATE TABLE YearlyExpenseReport (
 );
 
 
-INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (1);
-INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (2);
-INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (3);
-INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (4);
-INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (5);
-
 CREATE TABLE Employee(
 	UserID int,
 	Position varchar(50),
@@ -73,12 +54,6 @@ CREATE TABLE Employee(
 	FOREIGN KEY (UserID) REFERENCES Users ON DELETE CASCADE,
 	FOREIGN KEY (RestaurantID) REFERENCES Restaurant ON DELETE CASCADE
 );
-
-INSERT INTO Employee VALUES (7, 'Bartender', 1, 2);
-INSERT INTO Employee VALUES (2, 'Head Chef', 5, 1);
-INSERT INTO Employee VALUES (3, 'Sous Chef', 2, 2);
-INSERT INTO Employee VALUES (4, 'Waiter', 3, 3);
-INSERT INTO Employee VALUES (5, 'Dishwasher', 1, 3);
 
 
 CREATE TABLE HourlyPay(
@@ -176,71 +151,6 @@ CREATE TABLE Images (
 	PRIMARY KEY (RestaurantID, TAG),
 	FOREIGN KEY (RestaurantID) REFERENCES Restaurant ON DELETE CASCADE
 );
-
-INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-10-10', 'good', 4, 'yolo', 1, 2);
-INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-01-10', 'very good', 5, 'yoyo', 1, 4);
-INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2019-01-10', 'super good', 5, 'lolo', 1, 5);
-INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-11-10', 'bad', 2, 'anonymous', 3, 2);
-INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-12-10', 'super bad', 1, 'someone', 5, 2);
-INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-12-10', 'super bad', 1, 'someone', 5, 3);
-
-
-INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (1, 'Pasta', 40, '2020-01-01');
-INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (2, 'Salad', 20, '2019-10-10');
-INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (4, 'Rice', 3, '2222-01-01');
-INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (4, 'Soup', 10, '2099-01-01');
-INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (3, 'Burger', 30, '2020-01-01');
-INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (1, 'Soup', 30, '2020-01-01');
-INSERT INTO IngredientsUsed VALUES (6, 6, 5);
-
-
-INSERT INTO Customer VALUES (1, 500, 'Edible Food');
-INSERT INTO Customer VALUES (2, 98, 'Chinese');
-INSERT INTO Customer VALUES (3, 3, 'BBQ');
-INSERT INTO Customer VALUES (4, 45, 'Any');
-INSERT INTO Customer VALUES (7, 1, 'Quantity');
-
-INSERT INTO Images VALUES (1, 'place', 'http://iamafoodblog.com/wp-content/uploads/2018/06/china-poblano_1877.jpg');
-INSERT INTO Images VALUES (1, 'food', 'https://file.videopolis.com/D/9dc9f4ba-0b2d-4cbb-979f-fee7be8a4198/8485.11521.brussels.the-hotel-brussels.amenity.restaurant-AD3WAP2L-13000-853x480.jpeg');
-INSERT INTO Images VALUES (4, 'food', 'http://iamafoodblog.com/wp-content/uploads/2018/06/china-poblano_1877.jpg');
-INSERT INTO Images VALUES (5, 'place', 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2017/02/07/15/chinese.jpg?w968h681');
-INSERT INTO Images VALUES (3, 'place', 'http://iamafoodblog.com/wp-content/uploads/2018/06/china-poblano_1877.jpg');
-
-INSERT INTO HourlyPay VALUES ('Head Chef', 40.50, 5, 1, 2);
-INSERT INTO HourlyPay VALUES ('Sous Chef', 35.50, 2, 2, 3);
-INSERT INTO HourlyPay VALUES ('Waiter', 25.50, 3, 3, 4);
-INSERT INTO HourlyPay VALUES ('Dishwasher', 20.50, 1, 3,5);
-INSERT INTO HourlyPay VALUES ('Bartender', 90.50, 1, 2, 7);
-
-INSERT INTO BonusPay VALUES ('Head Chef',100, 1, 2);
-INSERT INTO BonusPay VALUES ('Sous Chef', 50, 2, 3);
-INSERT INTO BonusPay VALUES ('Waiter', 30, 3, 4);
-INSERT INTO BonusPay VALUES ('Dishwasher', 20, 3, 5);
-INSERT INTO BonusPay VALUES ('Bartender',150, 2, 7);
-
-INSERT INTO Ingredient (IngredientName, Amount, DateProduced) VALUES ( 'Carrot', 5, '2019-02-25');
-INSERT INTO Ingredient  (IngredientName, Amount, DateProduced)  VALUES ( 'Apple', 20, '2019-03-25');
-INSERT INTO Ingredient  ( IngredientName, Amount, DateProduced) VALUES ( 'Chicken', 5000, '2019-02-25');
-INSERT INTO Ingredient  ( IngredientName, Amount, DateProduced)  VALUES ( 'Noodles', 14, '2020-02-25');
-INSERT INTO Ingredient  (IngredientName, Amount, DateProduced) VALUES ('Beef', 7, '2019-02-25');
-
-INSERT INTO IngredientExpireOn VALUES ('Carrot',  '2019-01-25', '2019-02-25');
-INSERT INTO IngredientExpireOn VALUES ('Apple',  '2019-03-01', '2019-03-25');
-INSERT INTO IngredientExpireOn VALUES ('Chicken',  '2019-12-25', '2019-02-25');
-INSERT INTO IngredientExpireOn VALUES ('Noodles',  '2019-11-25', '2020-02-25');
-INSERT INTO IngredientExpireOn VALUES ('Beef',  '2019-12-20', '2019-02-25');
-
-INSERT INTO IngredientsUsed VALUES (6, 2, 3);
-INSERT INTO IngredientsUsed VALUES (7, 3, 4);
-INSERT INTO IngredientsUsed VALUES (8, 1, 3);
-INSERT INTO IngredientsUsed VALUES (7, 2, 1);
-INSERT INTO IngredientsUsed VALUES (6, 4, 5);
-
-INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (3,7,1000,1000,'2019-02-25', 2);
-INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (1, 7, 2, 30, '2019-02-25', 2);
-INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (2, 7, 10, 30, '2019-02-25', 2);
-INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (4, 7, 5, 100, '2019-02-25', 2);
-INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (5, 6, 2, 50, '2019-02-25', 4);
 
 
 -- Update Restaurant Rating
@@ -384,21 +294,110 @@ END;
 $update_ingredient_price$ LANGUAGE 'plpgsql';
 
 
-			-- SELECT result.totalprice from 
-			-- 							(SELECT SUM(p.totalprice)
-			-- 							FROM Purchases p, Employee e, Restaurant r
-			-- 							WHERE  r.restaurantid = e.restaurantid and p.userid = e.userid
-			-- 							GROUP BY e.restaurantid) as result
-			-- 							WHERE result.restaurantid = RestaurantID); 
-
 CREATE TRIGGER update_ingredient_price_p
 	AFTER INSERT
 	ON Purchases
 	FOR EACH ROW
 	EXECUTE PROCEDURE update_ingredient_price();
 
--- update ingredientsused set ingredientid=6, amountused=3 where ingredientid=8 and 
--- dishid=(select dishid from dish where dishname='Pasta' and restaurantid=1 limit 1)
+
+INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('Dianna', 'Dianna', 'hi');
+INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('Alice', 'Alice', 'password');
+INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('Bob', 'Bob', 'password');
+INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('carol', 'Carol', 'password5');
+INSERT INTO Users  (AccountName, UserName, UserPassword) VALUES ('ethan', 'Ethan', 'passwords');
+INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('fred', 'Fred', 'strongpassword');
+INSERT INTO Users (AccountName, UserName, UserPassword) VALUES ('gargantuan', 'Gargantuan', 'passwords');
+
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (1);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (2);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (3);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (4);
+INSERT INTO YearlyExpenseReport(RestaurantID) VALUES (5);
+
+INSERT INTO Employee VALUES (7, 'Bartender', 1, 2);
+INSERT INTO Employee VALUES (2, 'Head Chef', 5, 1);
+INSERT INTO Employee VALUES (3, 'Sous Chef', 2, 2);
+INSERT INTO Employee VALUES (4, 'Waiter', 3, 3);
+INSERT INTO Employee VALUES (5, 'Dishwasher', 1, 3);
+
+INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Korean', 'good food', '1234 BBQ Street', 'BBQueue Up');
+INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Australia', 'kangaroo', '1234 Kangaroo Street', 'The Kangaroo Chef');
+INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Chinese', 'good food', '1234 Wok Street', 'Wok You Looking At');
+INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Western', 'good food', '1234 Wild West Street', 'Old Saloon');
+INSERT INTO Restaurant (RestaurantType,RestaurantDescription, RestaurantAddress, RestaurantName) VALUES ('Fusion', 'good food', '1234 Lemonade Street', 'Just Lemonade');
+
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-10-10', 'good', 4, 'yolo', 1, 2);
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-01-10', 'very good', 5, 'yoyo', 1, 4);
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2019-01-10', 'super good', 5, 'lolo', 1, 5);
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-11-10', 'bad', 2, 'anonymous', 3, 2);
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-12-10', 'super bad', 1, 'someone', 5, 2);
+INSERT INTO Reviews (ReviewDate, ReviewDescription, Rating, CustomerName, RestaurantID, UserID ) VALUES ('2018-12-10', 'super bad', 1, 'someone', 5, 3);
+
+
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (1, 'Pasta', 40, '2020-01-01');
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (2, 'Salad', 20, '2019-10-10');
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (4, 'Rice', 3, '2222-01-01');
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil)  VALUES (4, 'Soup', 10, '2099-01-01');
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (3, 'Burger', 30, '2020-01-01');
+INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) VALUES (1, 'Soup', 30, '2020-01-01');
+INSERT INTO IngredientsUsed VALUES (6, 6, 5);
+
+
+INSERT INTO Customer VALUES (1, 500, 'Edible Food');
+INSERT INTO Customer VALUES (2, 98, 'Chinese');
+INSERT INTO Customer VALUES (3, 3, 'BBQ');
+INSERT INTO Customer VALUES (4, 45, 'Any');
+INSERT INTO Customer VALUES (7, 1, 'Quantity');
+
+INSERT INTO Images VALUES (1, 'place', 'http://iamafoodblog.com/wp-content/uploads/2018/06/china-poblano_1877.jpg');
+INSERT INTO Images VALUES (1, 'food', 'https://file.videopolis.com/D/9dc9f4ba-0b2d-4cbb-979f-fee7be8a4198/8485.11521.brussels.the-hotel-brussels.amenity.restaurant-AD3WAP2L-13000-853x480.jpeg');
+INSERT INTO Images VALUES (4, 'food', 'http://iamafoodblog.com/wp-content/uploads/2018/06/china-poblano_1877.jpg');
+INSERT INTO Images VALUES (5, 'place', 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2017/02/07/15/chinese.jpg?w968h681');
+INSERT INTO Images VALUES (3, 'place', 'http://iamafoodblog.com/wp-content/uploads/2018/06/china-poblano_1877.jpg');
+
+INSERT INTO HourlyPay VALUES ('Head Chef', 40.50, 5, 1, 2);
+INSERT INTO HourlyPay VALUES ('Sous Chef', 35.50, 2, 2, 3);
+INSERT INTO HourlyPay VALUES ('Waiter', 25.50, 3, 3, 4);
+INSERT INTO HourlyPay VALUES ('Dishwasher', 20.50, 1, 3,5);
+INSERT INTO HourlyPay VALUES ('Bartender', 90.50, 1, 2, 7);
+
+INSERT INTO BonusPay VALUES ('Head Chef',100, 1, 2);
+INSERT INTO BonusPay VALUES ('Sous Chef', 50, 2, 3);
+INSERT INTO BonusPay VALUES ('Waiter', 30, 3, 4);
+INSERT INTO BonusPay VALUES ('Dishwasher', 20, 3, 5);
+INSERT INTO BonusPay VALUES ('Bartender',150, 2, 7);
+
+INSERT INTO Ingredient (IngredientName, Amount, DateProduced) VALUES ( 'Carrot', 5, '2019-02-25');
+INSERT INTO Ingredient  (IngredientName, Amount, DateProduced)  VALUES ( 'Apple', 20, '2019-03-25');
+INSERT INTO Ingredient  ( IngredientName, Amount, DateProduced) VALUES ( 'Chicken', 5000, '2019-02-25');
+INSERT INTO Ingredient  ( IngredientName, Amount, DateProduced)  VALUES ( 'Noodles', 14, '2020-02-25');
+INSERT INTO Ingredient  (IngredientName, Amount, DateProduced) VALUES ('Beef', 7, '2019-02-25');
+
+INSERT INTO IngredientExpireOn VALUES ('Carrot',  '2019-01-25', '2019-02-25');
+INSERT INTO IngredientExpireOn VALUES ('Apple',  '2019-03-01', '2019-03-25');
+INSERT INTO IngredientExpireOn VALUES ('Chicken',  '2019-12-25', '2019-02-25');
+INSERT INTO IngredientExpireOn VALUES ('Noodles',  '2019-11-25', '2020-02-25');
+INSERT INTO IngredientExpireOn VALUES ('Beef',  '2019-12-20', '2019-02-25');
+
+INSERT INTO IngredientsUsed VALUES (6, 2, 3);
+INSERT INTO IngredientsUsed VALUES (7, 3, 4);
+INSERT INTO IngredientsUsed VALUES (8, 1, 3);
+INSERT INTO IngredientsUsed VALUES (7, 2, 1);
+INSERT INTO IngredientsUsed VALUES (6, 4, 5);
+
+INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (3,7,1000,1000,'2019-02-25', 2);
+INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (1, 7, 2, 30, '2019-02-25', 2);
+INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (2, 7, 10, 30, '2019-02-25', 2);
+INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (4, 7, 5, 100, '2019-02-25', 2);
+INSERT INTO Purchases (ingredientid, userid, amount, totalprice, purchasedate, restaurantid) VALUES (5, 6, 2, 50, '2019-02-25', 4);
+
+-- views
+create view u as  select * from users u 
+where not exists ((select r.restaurantid from restaurant r) 
+except (select re.restaurantid from reviews re where re.userid = u.userid));
+
+create view test as select count(*),r2.userid from reviews r2 group by r2.userid;
 
 
 SELECT * FROM Users;
@@ -414,33 +413,3 @@ SELECT * FROM Reviews;
 SELECT * FROM IngredientExpireOn;
 SELECT * FROM Ingredient;
 SELECT * FROM IngredientsUsed;
-
-
--- select distinct ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from ingredientexpireon ie, ingredient i
--- where (ie.ingredientname, ie.dateproduced, i.ingredientid) in (
--- select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in
--- (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=1 and iu.dishid=d.dishid group by iu.ingredientid)
--- )
-
-
--- select i.ingredientid, ie.ingredientname, ie.dateproduced, ie.expirydate, i.amount from 
---         ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
---         (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in 
---           (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid 
---           group by iu.ingredientid))
--- 		  union select p.price from ingredientexpireon ie, ingredient i,
--- purchases p 
--- where i.dateproduced=ie.dateproduced and i.ingredientname=ie.ingredientname and i.ingredientid in 
--- (select sum(p.totalprice) from purchases p where p.userid in (
--- select userid from employee where restaurantid=2)
--- );
-
--- insert into purchases (IngredientID, UserID, Amount, totalprice, PurchaseDate) values(29,2,100,1000, now())
-
-
-create view u as  select * from users u 
-where not exists ((select r.restaurantid from restaurant r) 
-except (select re.restaurantid from reviews re where re.userid = u.userid));
-
-create view test as select count(*),r2.userid from reviews r2 group by r2.userid;
-

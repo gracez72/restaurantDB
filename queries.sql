@@ -1,12 +1,12 @@
 select username,count from test,u where test.userid = u.userid;
 
-select * from restaurant where restaurantid = $1;
+select * from restaurant where restaurantid = 1;
 
-select to_char(reviewdate, 'YYYY-MM-DD') as reviewdate, reviewdescription, rating, customername from reviews where restaurantid = $1;
+select to_char(reviewdate, 'YYYY-MM-DD') as reviewdate, reviewdescription, rating, customername from reviews where restaurantid = 1;
 
-select dishid, dishname, price, to_char(availableuntil, 'YYYY-MM-DD') as availableuntil from dish where restaurantid = $1;
+select dishid, dishname, price, to_char(availableuntil, 'YYYY-MM-DD') as availableuntil from dish where restaurantid = 1;
 
-select * from images where restaurantid = $1;
+select * from images where restaurantid = 1;
 
 create view newi as (select IU.dishid,count(*) from ingredientsused IU where IU.dishid in (select D.dishid from dish D where D.restaurantid= ${restaurantid} )group by IU.dishid);
 
@@ -45,19 +45,6 @@ update dish set price = $1,availableuntil = $2 where lower(dishname) like $3 and
 select * from dish where lower(dishname) like '%$1%' and restaurantid = $2;
 
 delete from dish where lower(dishname) like $1 and restaurantid = $2;
-
-select i.ingredientid, ie.ingredientname, to_char( ie.dateproduced, 'DD/MM/YYYY') as dateproduced,  
-  to_char( ie.expirydate, 'YYYY-MM-DD') as expirydate, i.amount from 
-  ingredientexpireon ie, ingredient i where (ie.ingredientname, ie.dateproduced, i.ingredientid) in 
-  (select i.ingredientname, i.dateproduced, i.ingredientid from ingredient i where i.ingredientid in 
-    (Select iu.ingredientid from dish d, ingredientsused iu where d.restaurantid=$1 and iu.dishid=d.dishid 
-    group by iu.ingredientid))
-union select distinct i2.ingredientid, ie2.ingredientname, to_char( ie2.dateproduced, 'DD/MM/YYYY') as dateproduced, 
-to_char( ie2.expirydate, 'YYYY-MM-DD') as expirydate, i2.amount from ingredientexpireon ie2, ingredient i2,
-purchases p 
-where i2.dateproduced=ie2.dateproduced and i2.ingredientname=ie2.ingredientname and i2.ingredientid in 
-(select p.ingredientid from purchases p where p.userid in (
-select userid from employee where restaurantid=$1)) order by expirydate desc;
 
 insert into ingredientexpireon values($1,$2,$3);
 
