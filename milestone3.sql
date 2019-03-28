@@ -375,23 +375,14 @@ CREATE OR REPLACE FUNCTION update_ingredient_price()
 RETURNS trigger AS $update_ingredient_price$
 BEGIN
 	UPDATE YearlyExpenseReport
-		SET TotalIngredientPrices = (select sum(p.totalprice) from 
-										purchases p  where p.restaurantid=RestaurantID
-									);
-		
+		SET TotalIngredientPrices = (select sum(p.totalprice) from purchases p where NEW.restaurantid=RestaurantID)
+			WHERE NEW.restaurantid = RestaurantID;
 	RETURN NEW;
 END;
 $update_ingredient_price$ LANGUAGE 'plpgsql';
 
 
-			-- SELECT result.totalprice from 
-			-- 							(SELECT SUM(p.totalprice)
-			-- 							FROM Purchases p, Employee e, Restaurant r
-			-- 							WHERE  r.restaurantid = e.restaurantid and p.userid = e.userid
-			-- 							GROUP BY e.restaurantid) as result
-			-- 							WHERE result.restaurantid = RestaurantID); 
-
-CREATE TRIGGER update_ingredient_price_p
+CREATE TRIGGER update_ingredient_price
 	AFTER INSERT
 	ON Purchases
 	FOR EACH ROW
