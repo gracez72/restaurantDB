@@ -252,8 +252,8 @@ router.post('/updatedish', function (req, res) {
       //   res.render('disherr', { msg: "Dish isn't exist." });
       // }
       else {
-        client.query("update dish set price = $1,availableuntil = $2 where dishname = $3 and restaurantid = $4",
-          [req.body.price, d, req.body.dish, restaurantid], (error, result) => {
+        client.query("update dish set price = $1,availableuntil = $2 where lower(dishname) like $3 and restaurantid = $4",
+          [req.body.price, d, req.body.dish.toLowerCase(), restaurantid], (error, result) => {
             if (error) {
               console.log(error)
               res.render('disherr', { msg: "Dish isn't exist." });
@@ -282,7 +282,7 @@ router.post('/deletedish', function (req, res) {
       // }
       else {
         client.query("delete from dish where lower(dishname) like $1 and restaurantid = $2",
-          [req.body.dish, restaurantid], (error, result) => {
+          [req.body.dish.toLowerCase(), restaurantid], (error, result) => {
             if (error) {
               console.log(error)
               res.render('disherr', { msg: "Dish isn't exist." });

@@ -40,7 +40,7 @@ INSERT INTO Dish (RestaurantID, DishName, Price ,  AvailableUntil) values($1,$2,
 
 select * from dish where lower(dishname) like '%$1%' and restaurantid = $2;
 
-update dish set price = $1,availableuntil = $2 where dishname = $3 and restaurantid = $4;
+update dish set price = $1,availableuntil = $2 where lower(dishname) like $3 and restaurantid = $4
 
 select * from dish where lower(dishname) like '%$1%' and restaurantid = $2;
 
